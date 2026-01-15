@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/app_providers.dart';
-import '../models/customer.dart';
-import '../models/transaction.dart';
-import '../main.dart';
+import '../../domain/entities/customer.dart';
+import '../../domain/entities/transaction.dart';
+import '../../main.dart';
 import 'add_sell_page.dart';
 
 class CustomerDetailsPage extends ConsumerWidget {

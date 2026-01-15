@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/app_providers.dart';
-import '../models/customer.dart';
-import '../models/transaction.dart';
-import '../main.dart';
+import '../../domain/entities/customer.dart';
+import '../../domain/entities/transaction.dart';
+import '../../main.dart';
 
 class AddSellPage extends ConsumerStatefulWidget {
   final Customer customer;
@@ -15,9 +15,7 @@ class AddSellPage extends ConsumerStatefulWidget {
 
 class _AddSellPageState extends ConsumerState<AddSellPage> {
   final List<SaleItem> _items = [SaleItem(name: '', price: 0)];
-  final TextEditingController _paidController = TextEditingController(
-    text: '0',
-  );
+  final TextEditingController _paidController = TextEditingController();
 
   double get _totalAmount => _items.fold(0, (sum, item) => sum + item.price);
   double get _paidAmount => double.tryParse(_paidController.text) ?? 0;

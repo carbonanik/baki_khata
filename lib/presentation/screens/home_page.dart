@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/app_providers.dart';
-import '../models/customer.dart';
-import '../main.dart';
+import '../../domain/entities/customer.dart';
+import '../../main.dart';
 import 'customer_details_page.dart';
 
 class HomePage extends ConsumerWidget {

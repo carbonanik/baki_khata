@@ -1,42 +1,68 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import '../models/customer.dart';
-import '../models/transaction.dart';
+import '../../domain/entities/customer.dart';
+import '../../domain/entities/transaction.dart';
+import '../../data/repositories/customer_repository.dart';
+import '../../data/repositories/transaction_repository.dart';
+
+// Repository Providers
+final customerRepositoryProvider = Provider((ref) => CustomerRepository());
+final transactionRepositoryProvider = Provider(
+  (ref) => TransactionRepository(),
+);
 
 // Customer State
 class CustomerNotifier extends StateNotifier<List<Customer>> {
-  CustomerNotifier() : super([]);
+  final CustomerRepository _repo;
+  CustomerNotifier(this._repo) : super([]) {
+    loadCustomers();
+  }
 
-  void addCustomer(Customer customer) {
+  Future<void> loadCustomers() async {
+    state = await _repo.getCustomers();
+  }
+
+  Future<void> addCustomer(Customer customer) async {
+    await _repo.addCustomer(customer);
     state = [...state, customer];
   }
 
-  void deleteCustomer(String id) {
+  Future<void> deleteCustomer(String id) async {
+    await _repo.deleteCustomer(id);
     state = state.where((c) => c.id != id).toList();
   }
 }
 
 final customerProvider =
     StateNotifierProvider<CustomerNotifier, List<Customer>>((ref) {
-      return CustomerNotifier();
+      return CustomerNotifier(ref.watch(customerRepositoryProvider));
     });
 
 // Transaction State
 class TransactionNotifier extends StateNotifier<List<Transaction>> {
-  TransactionNotifier() : super([]);
+  final TransactionRepository _repo;
+  TransactionNotifier(this._repo) : super([]) {
+    loadTransactions();
+  }
 
-  void addTransaction(Transaction transaction) {
+  Future<void> loadTransactions() async {
+    state = await _repo.getTransactions();
+  }
+
+  Future<void> addTransaction(Transaction transaction) async {
+    await _repo.addTransaction(transaction);
     state = [...state, transaction];
   }
 
-  void deleteTransactionsForCustomer(String customerId) {
+  Future<void> deleteTransactionsForCustomer(String customerId) async {
+    await _repo.deleteTransactionsForCustomer(customerId);
     state = state.where((t) => t.customerId != customerId).toList();
   }
 }
 
 final transactionProvider =
     StateNotifierProvider<TransactionNotifier, List<Transaction>>((ref) {
-      return TransactionNotifier();
+      return TransactionNotifier(ref.watch(transactionRepositoryProvider));
     });
 
 // Computed Providers
