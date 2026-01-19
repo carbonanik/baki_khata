@@ -24,6 +24,7 @@ class Transaction {
   final List<SaleItem>? items; // Only for sell
   final double totalAmount;
   final double paidAmount;
+  final String? note;
   final DateTime timestamp;
 
   Transaction({
@@ -33,6 +34,7 @@ class Transaction {
     this.items,
     required this.totalAmount,
     required this.paidAmount,
+    this.note,
     DateTime? timestamp,
   }) : id = id ?? const Uuid().v4(),
        timestamp = timestamp ?? DateTime.now();
@@ -47,6 +49,7 @@ class Transaction {
       'items': items?.map((e) => e.toJson()).toList(),
       'totalAmount': totalAmount,
       'paidAmount': paidAmount,
+      'note': note,
       'timestamp': timestamp.toIso8601String(),
     };
   }
@@ -61,6 +64,7 @@ class Transaction {
           .toList(),
       totalAmount: json['totalAmount'].toDouble(),
       paidAmount: json['paidAmount'].toDouble(),
+      note: json['note'],
       timestamp: DateTime.parse(json['timestamp']),
     );
   }

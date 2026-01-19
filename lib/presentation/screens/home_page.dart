@@ -4,6 +4,7 @@ import '../providers/app_providers.dart';
 import '../../domain/entities/customer.dart';
 import '../../main.dart';
 import 'customer_details_page.dart';
+import 'products_page.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -18,10 +19,21 @@ class HomePage extends ConsumerWidget {
         title: const Text('Baki Khata'),
         actions: [
           IconButton(
-            onPressed: () => _showAddCustomerDialog(context, ref),
-            icon: const Icon(Icons.person_add_outlined, size: 28),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ProductsPage()),
+              );
+            },
+            icon: const Icon(Icons.inventory_2_outlined, size: 28),
+            tooltip: 'Products',
           ),
+          const SizedBox(width: 8),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showAddCustomerDialog(context, ref),
+        child: const Icon(Icons.person_add_outlined),
       ),
       body: CustomScrollView(
         slivers: [
@@ -182,6 +194,38 @@ class _CustomerTile extends ConsumerWidget {
         color: Colors.red.shade50,
         child: const Icon(Icons.delete_outline, color: Colors.red),
       ),
+      confirmDismiss: (direction) async {
+        return await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text("Delete Customer?"),
+              content: Text(
+                "Are you sure you want to delete ${customer.name}?",
+              ),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text(
+                    "CANCEL",
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text(
+                    "DELETE",
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
       onDismissed: (_) {
         ref.read(customerProvider.notifier).deleteCustomer(customer.id);
         ref

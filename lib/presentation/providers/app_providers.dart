@@ -4,12 +4,15 @@ import '../../domain/entities/customer.dart';
 import '../../domain/entities/transaction.dart';
 import '../../data/repositories/customer_repository.dart';
 import '../../data/repositories/transaction_repository.dart';
+import '../../domain/entities/product.dart';
+import '../../data/repositories/product_repository.dart';
 
 // Repository Providers
 final customerRepositoryProvider = Provider((ref) => CustomerRepository());
 final transactionRepositoryProvider = Provider(
   (ref) => TransactionRepository(),
 );
+final productRepositoryProvider = Provider((ref) => SembastProductRepository());
 
 // Customer State
 class CustomerNotifier extends StateNotifier<List<Customer>> {
@@ -65,11 +68,50 @@ final transactionProvider =
       return TransactionNotifier(ref.watch(transactionRepositoryProvider));
     });
 
+// Product State
+class ProductNotifier extends StateNotifier<List<Product>> {
+  final SembastProductRepository _repo;
+  ProductNotifier(this._repo) : super([]) {
+    loadProducts();
+  }
+
+  Future<void> loadProducts() async {
+    state = await _repo.getProducts();
+    // Also listen to changes if we want real-time updates, but load is fine for now
+    // Or prefer watching:
+    _repo.watchProducts().listen((products) {
+      state = products;
+    });
+  }
+
+  Future<void> addProduct(Product product) async {
+    await _repo.addProduct(product);
+  }
+
+  Future<void> updateProduct(Product product) async {
+    await _repo.updateProduct(product);
+  }
+
+  Future<void> deleteProduct(String id) async {
+    await _repo.deleteProduct(id);
+  }
+}
+
+final productProvider = StateNotifierProvider<ProductNotifier, List<Product>>((
+  ref,
+) {
+  return ProductNotifier(ref.watch(productRepositoryProvider));
+});
+
 // Computed Providers
 final customerTransactionsProvider = Provider.family<List<Transaction>, String>(
   (ref, customerId) {
     final transactions = ref.watch(transactionProvider);
-    return transactions.where((t) => t.customerId == customerId).toList();
+    final filtered = transactions
+        .where((t) => t.customerId == customerId)
+        .toList();
+    filtered.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    return filtered;
   },
 );
 

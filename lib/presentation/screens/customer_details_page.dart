@@ -159,9 +159,15 @@ class CustomerDetailsPage extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
-                  final transaction =
-                      transactions[transactions.length - 1 - index];
-                  return _TransactionTile(transaction: transaction);
+                  final transaction = transactions[index];
+                  return InkWell(
+                    onTap: () => _showTransactionDetails(
+                      context,
+                      transaction,
+                      transactions,
+                    ),
+                    child: _TransactionTile(transaction: transaction),
+                  );
                 }, childCount: transactions.length),
               ),
             ),
@@ -194,19 +200,34 @@ class CustomerDetailsPage extends ConsumerWidget {
 
   void _showAddPaymentDialog(BuildContext context, WidgetRef ref) {
     final amountController = TextEditingController();
+    final noteController = TextEditingController();
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Add Payment'),
-        content: TextField(
-          controller: amountController,
-          decoration: const InputDecoration(
-            hintText: 'Amount (৳)',
-            border: UnderlineInputBorder(),
-          ),
-          keyboardType: TextInputType.number,
-          autofocus: true,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: amountController,
+              decoration: const InputDecoration(
+                hintText: 'Amount (৳)',
+                border: UnderlineInputBorder(),
+              ),
+              keyboardType: TextInputType.number,
+              autofocus: true,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: noteController,
+              decoration: const InputDecoration(
+                hintText: 'Note (optional)',
+                border: UnderlineInputBorder(),
+              ),
+              textCapitalization: TextCapitalization.sentences,
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -222,6 +243,9 @@ class CustomerDetailsPage extends ConsumerWidget {
                   type: TransactionType.payment,
                   totalAmount: 0,
                   paidAmount: amount,
+                  note: noteController.text.trim().isEmpty
+                      ? null
+                      : noteController.text.trim(),
                 );
                 ref
                     .read(transactionProvider.notifier)
@@ -239,6 +263,156 @@ class CustomerDetailsPage extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _showTransactionDetails(
+    BuildContext context,
+    Transaction transaction,
+    List<Transaction> allTransactions,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        if (transaction.type == TransactionType.sell) {
+          return AlertDialog(
+            title: const Text('Sale Details'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  dateFormat.format(transaction.timestamp),
+                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+                ),
+                const SizedBox(height: 16),
+                if (transaction.items != null && transaction.items!.isNotEmpty)
+                  ...transaction.items!.map(
+                    (item) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(item.name),
+                          Text(currencyFormat.format(item.price)),
+                        ],
+                      ),
+                    ),
+                  )
+                else
+                  const Text('No items recorded'),
+                const Divider(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Total:',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      currencyFormat.format(transaction.totalAmount),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                _detailRow('Paid', transaction.paidAmount, color: Colors.green),
+                const SizedBox(height: 8),
+                _detailRow('Due', transaction.dueAmount, color: Colors.red),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('CLOSE'),
+              ),
+            ],
+          );
+        } else {
+          // Payment Details
+          // Calculate due before this payment
+          // Transactions are sorted newest first.
+          // We need sum of all transactions strictly older than this one.
+          // Older transactions have higher indices in the sorted list.
+
+          double dueBefore = 0;
+          // We can find the index of current transaction
+          // Since we passed the same instance from the list, identity check works
+          // Or we can just filter by timestamp < current.timestamp
+
+          for (var t in allTransactions) {
+            if (t.timestamp.isBefore(transaction.timestamp)) {
+              dueBefore += t.dueAmount;
+            }
+          }
+
+          final paymentAmount = transaction.paidAmount;
+          final dueAfter = dueBefore - paymentAmount;
+
+          return AlertDialog(
+            title: const Text('Payment Details'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  dateFormat.format(transaction.timestamp),
+                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+                ),
+                const SizedBox(height: 20),
+                _detailRow('Due before payment', dueBefore),
+                const SizedBox(height: 8),
+                _detailRow(
+                  'Payment Amount',
+                  paymentAmount,
+                  isBold: true,
+                  color: Colors.green,
+                ),
+                const SizedBox(height: 8),
+                const Divider(),
+                const SizedBox(height: 8),
+                _detailRow('Due after payment', dueAfter, isBold: true),
+                if (transaction.note != null &&
+                    transaction.note!.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  const Text(
+                    "Note:",
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  Text(transaction.note!),
+                ],
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('CLOSE'),
+              ),
+            ],
+          );
+        }
+      },
+    );
+  }
+
+  Widget _detailRow(
+    String label,
+    double amount, {
+    bool isBold = false,
+    Color? color,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: const TextStyle(color: Colors.grey)),
+        Text(
+          currencyFormat.format(amount),
+          style: TextStyle(
+            fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+            color: color ?? Colors.black,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -286,6 +460,20 @@ class _TransactionTile extends StatelessWidget {
                   dateFormat.format(transaction.timestamp),
                   style: const TextStyle(color: Colors.grey, fontSize: 11),
                 ),
+                if (transaction.note != null && transaction.note!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      transaction.note!,
+                      style: const TextStyle(
+                        fontStyle: FontStyle.italic,
+                        color: Colors.grey,
+                        fontSize: 12,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
               ],
             ),
           ),

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/app_providers.dart';
 import '../../domain/entities/customer.dart';
+
 import '../../domain/entities/transaction.dart';
+import '../../domain/entities/product.dart';
 import '../../main.dart';
 
 class AddSellPage extends ConsumerStatefulWidget {
@@ -14,15 +16,52 @@ class AddSellPage extends ConsumerStatefulWidget {
 }
 
 class _AddSellPageState extends ConsumerState<AddSellPage> {
-  final List<SaleItem> _items = [SaleItem(name: '', price: 0)];
+  final List<_ItemRowData> _rowData = [];
   final TextEditingController _paidController = TextEditingController();
+  final TextEditingController _noteController = TextEditingController();
 
-  double get _totalAmount => _items.fold(0, (sum, item) => sum + item.price);
+  @override
+  void initState() {
+    super.initState();
+    _addNewItem();
+  }
+
+  @override
+  void dispose() {
+    for (var data in _rowData) {
+      data.dispose();
+    }
+    _paidController.dispose();
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  void _addNewItem() {
+    _rowData.add(_ItemRowData());
+    setState(() {});
+  }
+
+  void _removeItem(int index) {
+    final removed = _rowData.removeAt(index);
+    removed.dispose();
+    setState(() {});
+  }
+
+  double get _totalAmount {
+    return _rowData.fold(0, (sum, item) {
+      final price = double.tryParse(item.priceController.text) ?? 0;
+      return sum + price;
+    });
+  }
+
   double get _paidAmount => double.tryParse(_paidController.text) ?? 0;
   double get _dueAmount => _totalAmount - _paidAmount;
 
   @override
   Widget build(BuildContext context) {
+    // Watch products for autocomplete
+    final products = ref.watch(productProvider);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Add Sell')),
       bottomNavigationBar: SafeArea(
@@ -60,14 +99,13 @@ class _AddSellPageState extends ConsumerState<AddSellPage> {
               ),
             ),
             const SizedBox(height: 12),
-            ...List.generate(_items.length, (index) => _buildItemRow(index)),
+            ...List.generate(
+              _rowData.length,
+              (index) => _buildItemRow(index, products),
+            ),
             const SizedBox(height: 12),
             TextButton.icon(
-              onPressed: () {
-                setState(() {
-                  _items.add(SaleItem(name: '', price: 0));
-                });
-              },
+              onPressed: _addNewItem,
               icon: const Icon(Icons.add, color: Colors.black),
               label: const Text(
                 'ADD ITEM',
@@ -107,6 +145,17 @@ class _AddSellPageState extends ConsumerState<AddSellPage> {
               ],
             ),
             const SizedBox(height: 16),
+            TextField(
+              controller: _noteController,
+              decoration: const InputDecoration(
+                hintText: 'Add a note (optional)',
+                isDense: true,
+                border: UnderlineInputBorder(),
+              ),
+              textCapitalization: TextCapitalization.sentences,
+            ),
+            const SizedBox(height: 16),
+
             _summaryRow(
               'Due Amount',
               _dueAmount,
@@ -118,29 +167,90 @@ class _AddSellPageState extends ConsumerState<AddSellPage> {
     );
   }
 
-  Widget _buildItemRow(int index) {
+  Widget _buildItemRow(int index, List<Product> products) {
+    final data = _rowData[index];
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
             flex: 3,
-            child: TextField(
-              decoration: const InputDecoration(
-                hintText: 'Item name',
-                isDense: true,
-                border: UnderlineInputBorder(),
-              ),
-              onChanged: (val) => _items[index] = SaleItem(
-                name: val,
-                price: _items[index].price,
-              ),
+            child: RawAutocomplete<Product>(
+              textEditingController: data.nameController,
+              focusNode: data.focusNode,
+              optionsBuilder: (TextEditingValue textEditingValue) {
+                if (textEditingValue.text == '') {
+                  return const Iterable<Product>.empty();
+                }
+                return products.where((Product option) {
+                  return option.name.toLowerCase().contains(
+                    textEditingValue.text.toLowerCase(),
+                  );
+                });
+              },
+              displayStringForOption: (Product option) => option.name,
+              onSelected: (Product selection) {
+                data.priceController.text = selection.price.toStringAsFixed(
+                  0,
+                ); // No decimals usually
+                setState(() {});
+              },
+              fieldViewBuilder:
+                  (
+                    BuildContext context,
+                    TextEditingController textEditingController,
+                    FocusNode focusNode,
+                    VoidCallback onFieldSubmitted,
+                  ) {
+                    return TextField(
+                      controller: textEditingController,
+                      focusNode: focusNode,
+                      decoration: const InputDecoration(
+                        hintText: 'Item name',
+                        isDense: true,
+                        border: UnderlineInputBorder(),
+                      ),
+                    );
+                  },
+              optionsViewBuilder:
+                  (
+                    BuildContext context,
+                    AutocompleteOnSelected<Product> onSelected,
+                    Iterable<Product> options,
+                  ) {
+                    return Align(
+                      alignment: Alignment.topLeft,
+                      child: Material(
+                        elevation: 4.0,
+                        child: SizedBox(
+                          width: 200,
+                          child: ListView.builder(
+                            padding: EdgeInsets.zero,
+                            shrinkWrap: true,
+                            itemCount: options.length,
+                            itemBuilder: (BuildContext context, int index) {
+                              final Product option = options.elementAt(index);
+                              return InkWell(
+                                onTap: () => onSelected(option),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Text(option.name),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    );
+                  },
             ),
           ),
           const SizedBox(width: 16),
           Expanded(
             flex: 2,
             child: TextField(
+              controller: data.priceController,
               decoration: const InputDecoration(
                 hintText: 'Price',
                 prefixText: '৳ ',
@@ -148,21 +258,12 @@ class _AddSellPageState extends ConsumerState<AddSellPage> {
                 border: UnderlineInputBorder(),
               ),
               keyboardType: TextInputType.number,
-              onChanged: (val) {
-                setState(() {
-                  _items[index] = SaleItem(
-                    name: _items[index].name,
-                    price: double.tryParse(val) ?? 0,
-                  );
-                });
-              },
+              onChanged: (_) => setState(() {}),
             ),
           ),
-          if (_items.length > 1)
+          if (_rowData.length > 1)
             IconButton(
-              onPressed: () {
-                setState(() => _items.removeAt(index));
-              },
+              onPressed: () => _removeItem(index),
               icon: const Icon(
                 Icons.remove_circle_outline,
                 color: Colors.grey,
@@ -206,15 +307,41 @@ class _AddSellPageState extends ConsumerState<AddSellPage> {
   void _saveSell() {
     if (_totalAmount <= 0) return;
 
+    final items = _rowData
+        .map((data) {
+          final name = data.nameController.text;
+          final price = double.tryParse(data.priceController.text) ?? 0;
+          return SaleItem(name: name, price: price);
+        })
+        .where((i) => i.name.isNotEmpty || i.price > 0)
+        .toList();
+
+    if (items.isEmpty) return;
+
     final transaction = Transaction(
       customerId: widget.customer.id,
       type: TransactionType.sell,
-      items: _items.where((i) => i.name.isNotEmpty || i.price > 0).toList(),
+      items: items,
       totalAmount: _totalAmount,
       paidAmount: _paidAmount,
+      note: _noteController.text.trim().isEmpty
+          ? null
+          : _noteController.text.trim(),
     );
 
     ref.read(transactionProvider.notifier).addTransaction(transaction);
     Navigator.pop(context);
+  }
+}
+
+class _ItemRowData {
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController priceController = TextEditingController();
+  final FocusNode focusNode = FocusNode();
+
+  void dispose() {
+    nameController.dispose();
+    priceController.dispose();
+    focusNode.dispose();
   }
 }
