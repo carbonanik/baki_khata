@@ -19,6 +19,7 @@ class SaleItem {
 
 class Transaction {
   final String id;
+  final String shopId;
   final String customerId;
   final TransactionType type;
   final List<SaleItem>? items; // Only for sell
@@ -29,6 +30,7 @@ class Transaction {
 
   Transaction({
     String? id,
+    required this.shopId,
     required this.customerId,
     required this.type,
     this.items,
@@ -44,6 +46,7 @@ class Transaction {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'shopId': shopId,
       'customerId': customerId,
       'type': type.name,
       'items': items?.map((e) => e.toJson()).toList(),
@@ -57,6 +60,7 @@ class Transaction {
   factory Transaction.fromJson(Map<String, dynamic> json) {
     return Transaction(
       id: json['id'],
+      shopId: json['shopId'] ?? 'default_shop', // Migration fallback
       customerId: json['customerId'],
       type: TransactionType.values.byName(json['type']),
       items: (json['items'] as List?)

@@ -7,9 +7,10 @@ class CustomerRepository implements ICustomerRepository {
   final _store = stringMapStoreFactory.store('customers');
 
   @override
-  Future<List<Customer>> getCustomers() async {
+  Future<List<Customer>> getCustomers(String shopId) async {
     final db = await DatabaseService.instance.database;
-    final snapshots = await _store.find(db);
+    final finder = Finder(filter: Filter.equals('shopId', shopId));
+    final snapshots = await _store.find(db, finder: finder);
     return snapshots.map((s) => Customer.fromJson(s.value)).toList();
   }
 

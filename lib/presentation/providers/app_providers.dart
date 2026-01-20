@@ -7,27 +7,52 @@ import '../../data/repositories/transaction_repository.dart';
 import '../../domain/entities/product.dart';
 import '../../data/repositories/product_repository.dart';
 
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../domain/entities/shop.dart';
+import '../../data/repositories/shop_repository.dart';
+import 'shop_provider.dart';
+
+// Shared Preferences
+final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
+  throw UnimplementedError();
+});
+
 // Repository Providers
+final shopRepositoryProvider = Provider((ref) => ShopRepository());
 final customerRepositoryProvider = Provider((ref) => CustomerRepository());
 final transactionRepositoryProvider = Provider(
   (ref) => TransactionRepository(),
 );
 final productRepositoryProvider = Provider((ref) => SembastProductRepository());
 
+// Shop State
+final shopProvider = StateNotifierProvider<ShopNotifier, Shop?>((ref) {
+  final repo = ref.watch(shopRepositoryProvider);
+  final prefs = ref.watch(sharedPreferencesProvider);
+  return ShopNotifier(repo, prefs);
+});
+
 // Customer State
 class CustomerNotifier extends StateNotifier<List<Customer>> {
   final CustomerRepository _repo;
-  CustomerNotifier(this._repo) : super([]) {
+  final String _shopId;
+
+  CustomerNotifier(this._repo, this._shopId) : super([]) {
     loadCustomers();
   }
 
   Future<void> loadCustomers() async {
-    state = await _repo.getCustomers();
+    final customers = await _repo.getCustomers(_shopId);
+    if (mounted) {
+      state = customers;
+    }
   }
 
   Future<void> addCustomer(Customer customer) async {
-    await _repo.addCustomer(customer);
-    state = [...state, customer];
+    // Ensure the customer has the correct shopId
+    final customerWithShop = customer.copyWith(shopId: _shopId);
+    await _repo.addCustomer(customerWithShop);
+    state = [...state, customerWithShop];
   }
 
   Future<void> deleteCustomer(String id) async {
@@ -38,23 +63,44 @@ class CustomerNotifier extends StateNotifier<List<Customer>> {
 
 final customerProvider =
     StateNotifierProvider<CustomerNotifier, List<Customer>>((ref) {
-      return CustomerNotifier(ref.watch(customerRepositoryProvider));
+      final shop = ref.watch(shopProvider);
+      if (shop == null)
+        return CustomerNotifier(ref.watch(customerRepositoryProvider), '');
+
+      return CustomerNotifier(ref.watch(customerRepositoryProvider), shop.id);
     });
 
 // Transaction State
 class TransactionNotifier extends StateNotifier<List<Transaction>> {
   final TransactionRepository _repo;
-  TransactionNotifier(this._repo) : super([]) {
+  final String _shopId;
+
+  TransactionNotifier(this._repo, this._shopId) : super([]) {
     loadTransactions();
   }
 
   Future<void> loadTransactions() async {
-    state = await _repo.getTransactions();
+    final transactions = await _repo.getTransactions(_shopId);
+    if (mounted) {
+      state = transactions;
+    }
   }
 
   Future<void> addTransaction(Transaction transaction) async {
-    await _repo.addTransaction(transaction);
-    state = [...state, transaction];
+    final finalTransaction = Transaction(
+      id: transaction.id,
+      shopId: _shopId,
+      customerId: transaction.customerId,
+      type: transaction.type,
+      items: transaction.items,
+      totalAmount: transaction.totalAmount,
+      paidAmount: transaction.paidAmount,
+      note: transaction.note,
+      timestamp: transaction.timestamp,
+    );
+
+    await _repo.addTransaction(finalTransaction);
+    state = [...state, finalTransaction];
   }
 
   Future<void> deleteTransactionsForCustomer(String customerId) async {
@@ -65,31 +111,54 @@ class TransactionNotifier extends StateNotifier<List<Transaction>> {
 
 final transactionProvider =
     StateNotifierProvider<TransactionNotifier, List<Transaction>>((ref) {
-      return TransactionNotifier(ref.watch(transactionRepositoryProvider));
+      final shop = ref.watch(shopProvider);
+      if (shop == null)
+        return TransactionNotifier(
+          ref.watch(transactionRepositoryProvider),
+          '',
+        );
+
+      return TransactionNotifier(
+        ref.watch(transactionRepositoryProvider),
+        shop.id,
+      );
     });
 
 // Product State
 class ProductNotifier extends StateNotifier<List<Product>> {
   final SembastProductRepository _repo;
-  ProductNotifier(this._repo) : super([]) {
+  final String _shopId;
+
+  ProductNotifier(this._repo, this._shopId) : super([]) {
     loadProducts();
   }
 
   Future<void> loadProducts() async {
-    state = await _repo.getProducts();
-    // Also listen to changes if we want real-time updates, but load is fine for now
-    // Or prefer watching:
-    _repo.watchProducts().listen((products) {
+    state = await _repo.getProducts(_shopId);
+    _repo.watchProducts(_shopId).listen((products) {
       state = products;
     });
   }
 
   Future<void> addProduct(Product product) async {
-    await _repo.addProduct(product);
+    final productWithShop = Product(
+      id: product.id,
+      shopId: _shopId,
+      name: product.name,
+      price: product.price,
+    );
+    await _repo.addProduct(productWithShop);
   }
 
   Future<void> updateProduct(Product product) async {
-    await _repo.updateProduct(product);
+    // Ensure shopId is preserved or enforced
+    final productWithShop = Product(
+      id: product.id,
+      shopId: _shopId,
+      name: product.name,
+      price: product.price,
+    );
+    await _repo.updateProduct(productWithShop);
   }
 
   Future<void> deleteProduct(String id) async {
@@ -100,7 +169,11 @@ class ProductNotifier extends StateNotifier<List<Product>> {
 final productProvider = StateNotifierProvider<ProductNotifier, List<Product>>((
   ref,
 ) {
-  return ProductNotifier(ref.watch(productRepositoryProvider));
+  final shop = ref.watch(shopProvider);
+  if (shop == null)
+    return ProductNotifier(ref.watch(productRepositoryProvider), '');
+
+  return ProductNotifier(ref.watch(productRepositoryProvider), shop.id);
 });
 
 // Computed Providers
