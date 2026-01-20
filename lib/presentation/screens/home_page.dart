@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/app_providers.dart';
 import '../../domain/entities/customer.dart';
+import '../../domain/entities/shop.dart';
 import '../../main.dart';
 import 'customer_details_page.dart';
 import 'products_page.dart';
@@ -16,7 +17,83 @@ class HomePage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Baki Khata'),
+        title: Consumer(
+          builder: (context, ref, child) {
+            final shop = ref.watch(shopProvider);
+            final shopListNotifier = ref.watch(shopProvider.notifier);
+
+            if (shop == null) return const Text('Baki Khata');
+
+            return FutureBuilder<List<Shop>>(
+              future: shopListNotifier.getShops(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) return Text(shop.name);
+
+                final shops = snapshot.data!;
+
+                // Ensure current shop exists in the list to prevent crash
+                final isValidShop = shops.any((s) => s.id == shop.id);
+                final selectedValue = isValidShop ? shop.id : null;
+
+                return DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: selectedValue,
+                    hint: Text(
+                      shop.name,
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    icon: const Icon(
+                      Icons.arrow_drop_down,
+                      color: Colors.black,
+                    ),
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                    ),
+                    onChanged: (String? newValue) {
+                      if (newValue == 'add_new') {
+                        _showAddShopDialog(context, ref);
+                      } else if (newValue != null) {
+                        final selectedShop = shops.firstWhere(
+                          (s) => s.id == newValue,
+                        );
+                        ref
+                            .read(shopProvider.notifier)
+                            .selectShop(selectedShop);
+                      }
+                    },
+                    items: [
+                      ...shops.map<DropdownMenuItem<String>>((Shop s) {
+                        return DropdownMenuItem<String>(
+                          value: s.id,
+                          child: Text(s.name),
+                        );
+                      }),
+                      const DropdownMenuItem<String>(
+                        value: 'add_new',
+                        child: Row(
+                          children: [
+                            Icon(Icons.add, size: 20, color: Colors.blue),
+                            SizedBox(width: 8),
+                            Text(
+                              'Add New Shop',
+                              style: TextStyle(color: Colors.blue),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        ),
         actions: [
           IconButton(
             onPressed: () {
@@ -155,12 +232,88 @@ class HomePage extends ConsumerWidget {
             onPressed: () {
               if (nameController.text.isNotEmpty &&
                   phoneController.text.isNotEmpty) {
+                final shop = ref.read(shopProvider);
                 final customer = Customer(
+                  shopId: shop?.id ?? '',
                   name: nameController.text,
                   phone: phoneController.text,
                 );
                 ref.read(customerProvider.notifier).addCustomer(customer);
                 Navigator.pop(context);
+              }
+            },
+            child: const Text(
+              'ADD',
+              style: TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAddShopDialog(BuildContext context, WidgetRef ref) {
+    final nameController = TextEditingController();
+    final addressController = TextEditingController();
+    final phoneController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Add New Shop'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                hintText: 'Shop Name',
+                border: UnderlineInputBorder(),
+              ),
+              textCapitalization: TextCapitalization.words,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: addressController,
+              decoration: const InputDecoration(
+                hintText: 'Address (Optional)',
+                border: UnderlineInputBorder(),
+              ),
+              textCapitalization: TextCapitalization.words,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: phoneController,
+              decoration: const InputDecoration(
+                hintText: 'Phone (Optional)',
+                border: UnderlineInputBorder(),
+              ),
+              keyboardType: TextInputType.phone,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('CANCEL', style: TextStyle(color: Colors.grey)),
+          ),
+          TextButton(
+            onPressed: () async {
+              if (nameController.text.isNotEmpty) {
+                final shop = Shop(
+                  name: nameController.text,
+                  address: addressController.text.isEmpty
+                      ? null
+                      : addressController.text,
+                  phone: phoneController.text.isEmpty
+                      ? null
+                      : phoneController.text,
+                );
+                await ref.read(shopProvider.notifier).addShop(shop);
+                if (context.mounted) Navigator.pop(context);
               }
             },
             child: const Text(

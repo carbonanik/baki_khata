@@ -93,6 +93,7 @@ class ProductsPage extends ConsumerWidget {
               if (nameController.text.isNotEmpty &&
                   priceController.text.isNotEmpty) {
                 final product = Product(
+                  shopId: '', // Provider will set this
                   name: nameController.text,
                   price: double.tryParse(priceController.text) ?? 0,
                 );
@@ -161,6 +162,7 @@ class ProductsPage extends ConsumerWidget {
                   priceController.text.isNotEmpty) {
                 final updatedProduct = Product(
                   id: product.id,
+                  shopId: '', // Provider will set this
                   name: nameController.text,
                   price: double.tryParse(priceController.text) ?? 0,
                 );

@@ -239,6 +239,7 @@ class CustomerDetailsPage extends ConsumerWidget {
               final amount = double.tryParse(amountController.text);
               if (amount != null && amount > 0) {
                 final transaction = Transaction(
+                  shopId: '', // Provider will set this
                   customerId: customer.id,
                   type: TransactionType.payment,
                   totalAmount: 0,

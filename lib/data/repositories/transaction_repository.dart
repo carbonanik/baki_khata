@@ -7,9 +7,12 @@ class TransactionRepository implements ITransactionRepository {
   final _store = sembast.stringMapStoreFactory.store('transactions');
 
   @override
-  Future<List<Transaction>> getTransactions() async {
+  Future<List<Transaction>> getTransactions(String shopId) async {
     final db = await DatabaseService.instance.database;
-    final snapshots = await _store.find(db);
+    final finder = sembast.Finder(
+      filter: sembast.Filter.equals('shopId', shopId),
+    );
+    final snapshots = await _store.find(db, finder: finder);
     return snapshots.map((s) => Transaction.fromJson(s.value)).toList();
   }
 

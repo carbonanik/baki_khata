@@ -319,6 +319,7 @@ class _AddSellPageState extends ConsumerState<AddSellPage> {
     if (items.isEmpty) return;
 
     final transaction = Transaction(
+      shopId: '', // Provider will set this
       customerId: widget.customer.id,
       type: TransactionType.sell,
       items: items,

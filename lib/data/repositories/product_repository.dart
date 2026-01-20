@@ -19,9 +19,10 @@ class SembastProductRepository implements ProductRepository {
   }
 
   @override
-  Future<List<Product>> getProducts() async {
+  Future<List<Product>> getProducts(String shopId) async {
     final db = await DatabaseService.instance.database;
-    final snapshots = await _store.find(db);
+    final finder = Finder(filter: Filter.equals('shopId', shopId));
+    final snapshots = await _store.find(db, finder: finder);
     return snapshots
         .map((snapshot) => Product.fromJson(snapshot.value))
         .toList();
@@ -34,7 +35,7 @@ class SembastProductRepository implements ProductRepository {
   }
 
   @override
-  Stream<List<Product>> watchProducts() {
+  Stream<List<Product>> watchProducts(String shopId) {
     // Sembast stream needs a database reference.
     // Since we need to wait for the database, we can use a Stream.fromFuture or similar,
     // but sembast's query.onSnapshots(db) expects a synchronous db object if possible,
@@ -49,7 +50,8 @@ class SembastProductRepository implements ProductRepository {
     return Stream.fromFuture(DatabaseService.instance.database).asyncExpand((
       db,
     ) {
-      return _store.query().onSnapshots(db).map((snapshots) {
+      final finder = Finder(filter: Filter.equals('shopId', shopId));
+      return _store.query(finder: finder).onSnapshots(db).map((snapshots) {
         return snapshots
             .map((snapshot) => Product.fromJson(snapshot.value))
             .toList();
