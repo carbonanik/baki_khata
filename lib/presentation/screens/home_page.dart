@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/app_providers.dart';
-import '../widgets/home/shop_selector.dart';
 import '../widgets/home/balance_overview_card.dart';
 import '../widgets/home/customer_tile.dart';
 import '../widgets/dialogs/add_customer_dialog.dart';
-import 'products_page.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -16,22 +14,6 @@ class HomePage extends ConsumerWidget {
     final stats = ref.watch(totalStatsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const ShopSelector(),
-        actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ProductsPage()),
-              );
-            },
-            icon: const Icon(Icons.inventory_2_outlined, size: 28),
-            tooltip: 'Products',
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => showDialog(
           context: context,

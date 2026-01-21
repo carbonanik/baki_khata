@@ -6,6 +6,8 @@ import '../../data/repositories/customer_repository.dart';
 import '../../data/repositories/transaction_repository.dart';
 import '../../domain/entities/product.dart';
 import '../../data/repositories/product_repository.dart';
+import '../../domain/entities/expense.dart';
+import '../../data/repositories/expense_repository.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/entities/shop.dart';
@@ -24,6 +26,7 @@ final transactionRepositoryProvider = Provider(
   (ref) => TransactionRepository(),
 );
 final productRepositoryProvider = Provider((ref) => SembastProductRepository());
+final expenseRepositoryProvider = Provider((ref) => ExpenseRepository());
 
 // Shop State
 final shopProvider = StateNotifierProvider<ShopNotifier, Shop?>((ref) {
@@ -176,6 +179,43 @@ final productProvider = StateNotifierProvider<ProductNotifier, List<Product>>((
   return ProductNotifier(ref.watch(productRepositoryProvider), shop.id);
 });
 
+// Expense State
+class ExpenseNotifier extends StateNotifier<List<Expense>> {
+  final ExpenseRepository _repo;
+  final String _shopId;
+
+  ExpenseNotifier(this._repo, this._shopId) : super([]) {
+    loadExpenses();
+  }
+
+  Future<void> loadExpenses() async {
+    final expenses = await _repo.getExpenses(_shopId);
+    if (mounted) {
+      state = expenses;
+    }
+  }
+
+  Future<void> addExpense(Expense expense) async {
+    final expenseWithShop = expense.copyWith(shopId: _shopId);
+    await _repo.addExpense(expenseWithShop);
+    state = [...state, expenseWithShop];
+  }
+
+  Future<void> deleteExpense(String id) async {
+    await _repo.deleteExpense(id);
+    state = state.where((e) => e.id != id).toList();
+  }
+}
+
+final expenseProvider = StateNotifierProvider<ExpenseNotifier, List<Expense>>((
+  ref,
+) {
+  final shop = ref.watch(shopProvider);
+  if (shop == null)
+    return ExpenseNotifier(ref.watch(expenseRepositoryProvider), '');
+  return ExpenseNotifier(ref.watch(expenseRepositoryProvider), shop.id);
+});
+
 // Computed Providers
 final customerTransactionsProvider = Provider.family<List<Transaction>, String>(
   (ref, customerId) {
@@ -212,4 +252,9 @@ final totalStatsProvider = Provider((ref) {
   }
 
   return {'sell': totalSell, 'paid': totalPaid, 'due': totalSell - totalPaid};
+});
+
+final totalExpenseProvider = Provider((ref) {
+  final expenses = ref.watch(expenseProvider);
+  return expenses.fold(0.0, (sum, item) => sum + item.amount);
 });
