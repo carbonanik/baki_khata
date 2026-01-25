@@ -24,6 +24,7 @@ class HomePage extends ConsumerWidget {
       body: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(child: BalanceOverviewCard(stats: stats)),
+          const SliverToBoxAdapter(child: SizedBox(height: 20)),
           if (customers.isEmpty)
             const SliverFillRemaining(
               child: Center(

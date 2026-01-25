@@ -23,14 +23,11 @@ class SellItemRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        // crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 12.0),
-            child: Text(
-              '${index + 1}.',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
+          Text(
+            '${index + 1}.',
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -83,26 +80,14 @@ class SellItemRow extends StatelessWidget {
                       focusNode: rowData.focusNode,
                       decoration: const InputDecoration(
                         hintText: 'Item Name',
-                        border: UnderlineInputBorder(),
+                        // border: UnderlineInputBorder(),
+                        border: InputBorder.none,
                         isDense: true,
                       ),
                       textCapitalization: TextCapitalization.sentences,
                     );
                   },
                 ),
-                // If not using Autocomplete, just:
-                /*
-                TextField(
-                  controller: rowData.nameController,
-                  focusNode: rowData.focusNode,
-                  decoration: const InputDecoration(
-                    hintText: 'Item Name',
-                    border: UnderlineInputBorder(),
-                    isDense: true,
-                  ),
-                  textCapitalization: TextCapitalization.sentences,
-                ),
-                */
               ],
             ),
           ),
@@ -114,7 +99,7 @@ class SellItemRow extends StatelessWidget {
               decoration: const InputDecoration(
                 hintText: 'Price',
                 prefixText: '৳ ',
-                border: UnderlineInputBorder(),
+                border: InputBorder.none,
                 isDense: true,
               ),
               keyboardType: TextInputType.number,

@@ -133,125 +133,118 @@ class _AddSellPageState extends ConsumerState<AddSellPage> {
             fontWeight: FontWeight.w600,
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: totalAmount > 0 ? _handleSave : null,
-            child: Text(
-              'Save',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: totalAmount > 0 ? Colors.black87 : Colors.grey[400],
-              ),
-            ),
-          ),
-        ],
+        actions: [],
       ),
-      body: Column(
-        children: [
-          // Thin divider
-          Container(height: 1, color: Colors.grey[200]),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            children: [
+              // Thin divider
+              Container(height: 1, color: Colors.grey[200]),
 
-          Expanded(
-            child: SingleChildScrollView(
-              // padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Items Section
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 24),
-                        Text(
-                          'Items',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey[600],
-                            letterSpacing: 0.5,
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      // Items Section
+                      const SizedBox(height: 24),
+
+                      ..._rowData.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final row = entry.value;
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: SellItemRow(
+                            index: index,
+                            rowData: row,
+                            products: products,
+                            onRemove: () => _removeRow(index),
+                            onCalculated: _calculateTotal,
                           ),
+                        );
+                      }),
+
+                      // Add Item Button
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          elevation: 6,
+                          shadowColor: Colors.black38,
                         ),
-                        const SizedBox(height: 16),
-
-                        ..._rowData.asMap().entries.map((entry) {
-                          final index = entry.key;
-                          final row = entry.value;
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: SellItemRow(
-                              index: index,
-                              rowData: row,
-                              products: products,
-                              onRemove: () => _removeRow(index),
-                              onCalculated: _calculateTotal,
-                            ),
-                          );
-                        }),
-
-                        // Add Item Button
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.black,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            elevation: 0,
-                          ),
-                          onPressed: _addNewRow,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.add, size: 20, color: Colors.white),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Add Item',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.white,
-                                ),
+                        onPressed: _addNewRow,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.add, size: 20),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Add Item',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
+
+                      const SizedBox(height: 32),
+
+                      // Summary Section
+                      SellSummary(
+                        totalAmount: totalAmount,
+                        paidAmount: paidAmount,
+                        dueAmount: dueAmount,
+                        isFullPaid: isFullPaid,
+                        paidController: paidController,
+                        noteController: noteController,
+                        onPaidChanged: _calculateTotal,
+                        onFullPaidChanged: (val) {
+                          setState(() {
+                            isFullPaid = val;
+                            // Clear paid amount if not full paid
+                            if (!isFullPaid) {
+                              paidController.text = '0';
+                            }
+                            _calculateTotal();
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: totalAmount > 0 ? _handleSave : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.black,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'SAVE SELL',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ),
-
-                  Divider(),
-                  const SizedBox(height: 32),
-
-                  // Summary Section
-                  SellSummary(
-                    totalAmount: totalAmount,
-                    paidAmount: paidAmount,
-                    dueAmount: dueAmount,
-                    isFullPaid: isFullPaid,
-                    paidController: paidController,
-                    noteController: noteController,
-                    onPaidChanged: _calculateTotal,
-                    onFullPaidChanged: (val) {
-                      setState(() {
-                        isFullPaid = val;
-                        // Clear paid amount if not full paid
-                        if (!isFullPaid) {
-                          paidController.text = '0';
-                        }
-                        _calculateTotal();
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 32),
                 ],
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
