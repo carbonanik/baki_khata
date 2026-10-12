@@ -1,4 +1,5 @@
 import 'package:baki_khata/domain/entities/customer.dart';
+import 'package:baki_khata/domain/entities/transaction.dart';
 import 'package:baki_khata/main.dart';
 import 'package:baki_khata/presentation/providers/app_providers.dart';
 import 'package:flutter/material.dart';
@@ -7,42 +8,59 @@ import '../../screens/customer_details_page.dart';
 
 class CustomerTile extends ConsumerWidget {
   final Customer customer;
+
   const CustomerTile({super.key, required this.customer});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final due = ref.watch(customerDueProvider(customer.id));
+    final transactions = ref.watch(customerTransactionsProvider(customer.id));
+    final salesCount = transactions
+        .where((transaction) => transaction.type == TransactionType.sell)
+        .length;
+    final latestTransaction = transactions.isEmpty ? null : transactions.first;
+    final daysSinceUpdate = latestTransaction == null
+        ? null
+        : DateTime.now().difference(latestTransaction.timestamp).inDays;
+    final avatarStyle = _avatarStyle(customer.name);
+    final updatedLabel = switch (daysSinceUpdate) {
+      null => 'No activity yet',
+      0 => 'Last updated today',
+      1 => 'Last updated yesterday',
+      final days => 'Last updated $days days ago',
+    };
 
     return Dismissible(
       key: Key(customer.id),
       direction: DismissDirection.endToStart,
       background: Container(
         alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
-        color: Colors.red.shade50,
+        padding: const EdgeInsets.only(right: 16),
+        decoration: BoxDecoration(
+          color: Colors.red.shade50,
+          borderRadius: BorderRadius.circular(18),
+        ),
         child: const Icon(Icons.delete_outline, color: Colors.red),
       ),
       confirmDismiss: (direction) async {
         return await showDialog(
           context: context,
-          builder: (BuildContext context) {
+          builder: (context) {
             return AlertDialog(
-              title: const Text("Delete Customer?"),
-              content: Text(
-                "Are you sure you want to delete ${customer.name}?",
-              ),
-              actions: <Widget>[
+              title: const Text('Delete Customer?'),
+              content: Text('Are you sure you want to delete ${customer.name}?'),
+              actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
                   child: const Text(
-                    "CANCEL",
+                    'CANCEL',
                     style: TextStyle(color: Colors.grey),
                   ),
                 ),
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(true),
                   child: const Text(
-                    "DELETE",
+                    'DELETE',
                     style: TextStyle(
                       color: Colors.red,
                       fontWeight: FontWeight.bold,
@@ -60,79 +78,205 @@ class CustomerTile extends ConsumerWidget {
             .read(transactionProvider.notifier)
             .deleteTransactionsForCustomer(customer.id);
       },
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => CustomerDetailsPage(customer: customer),
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CustomerDetailsPage(customer: customer),
+              ),
+            );
+          },
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 118),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: const Color(0xFFF1F4F8)),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x080F2945),
+                  blurRadius: 14,
+                  offset: Offset(0, 6),
+                ),
+              ],
             ),
-          );
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 20),
-          decoration: const BoxDecoration(
-            border: Border(bottom: BorderSide(color: Color(0xFFF0F0F0))),
-          ),
-          child: Row(
-            children: [
-              CircleAvatar(
-                backgroundColor: Colors.black,
-                radius: 20,
-                child: Text(
-                  customer.name[0].toUpperCase(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+            child: Row(
+              children: [
+                Container(
+                  width: 54,
+                  height: 54,
+                  decoration: BoxDecoration(
+                    color: avatarStyle.background,
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    customer.name.isEmpty
+                        ? '?'
+                        : customer.name[0].toUpperCase(),
+                    style: TextStyle(
+                      color: avatarStyle.foreground,
+                      fontSize: 26,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                const SizedBox(width: 13),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        customer.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Color(0xFF111827),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        customer.phone,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Color(0xFF7D8795),
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(height: 7),
+                      Wrap(
+                        spacing: 10,
+                        runSpacing: 3,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          _Metadata(
+                            icon: Icons.shopping_bag_outlined,
+                            label:
+                                '$salesCount ${salesCount == 1 ? 'sale' : 'sales'}',
+                          ),
+                          const Text(
+                            '•',
+                            style: TextStyle(
+                              color: Color(0xFF7D8795),
+                              fontSize: 11,
+                            ),
+                          ),
+                          _Metadata(
+                            icon: Icons.access_time_rounded,
+                            label: updatedLabel,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(
-                      customer.name,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        currencyFormat.format(due),
+                        style: TextStyle(
+                          color: due > 0
+                              ? const Color(0xFFEF2929)
+                              : const Color(0xFF209A4B),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                     ),
-                    Text(
-                      customer.phone,
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: due > 0
+                            ? const Color(0xFFFFE9EB)
+                            : const Color(0xFFE8F8ED),
+                        borderRadius: BorderRadius.circular(11),
+                      ),
+                      child: Text(
+                        due > 0 ? 'Due' : 'Paid',
+                        style: TextStyle(
+                          color: due > 0
+                              ? const Color(0xFFEF2929)
+                              : const Color(0xFF209A4B),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ],
                 ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    currencyFormat.format(due),
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: due > 0
-                          ? Colors.red.shade700
-                          : Colors.green.shade700,
-                    ),
-                  ),
-                  const Text(
-                    'DUE',
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: Colors.grey,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+                const SizedBox(width: 6),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: Color(0xFF697586),
+                  size: 22,
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
+
+  _AvatarStyle _avatarStyle(String name) {
+    final palette = [
+      const _AvatarStyle(Color(0xFFE7F0FF), Color(0xFF1768E8)),
+      const _AvatarStyle(Color(0xFFE5F8EA), Color(0xFF209A4B)),
+      const _AvatarStyle(Color(0xFFF0ECFF), Color(0xFF6540C8)),
+      const _AvatarStyle(Color(0xFFFFF1DE), Color(0xFFD38313)),
+    ];
+    return palette[name.isEmpty ? 0 : name.codeUnitAt(0) % palette.length];
+  }
+}
+
+class _Metadata extends StatelessWidget {
+  const _Metadata({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 15, color: const Color(0xFF697586)),
+        const SizedBox(width: 5),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Color(0xFF697586),
+            fontSize: 11,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AvatarStyle {
+  const _AvatarStyle(this.background, this.foreground);
+
+  final Color background;
+  final Color foreground;
 }

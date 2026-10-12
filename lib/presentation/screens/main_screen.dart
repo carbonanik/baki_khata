@@ -1,8 +1,7 @@
 import 'package:baki_khata/presentation/screens/products_page.dart';
 import 'package:flutter/material.dart';
-import '../../presentation/screens/home_page.dart';
-import '../../presentation/screens/expense_page.dart';
-import '../widgets/home/shop_selector.dart';
+import 'home_page.dart';
+import 'expense_page.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -14,60 +13,115 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
 
-  static const List<Widget> _pages = <Widget>[
-    HomePage(),
-    ExpensePage(),
-    ProductsPage(), // Assuming you might want Products here too, but users request didn't strictly say tab, but implementation plan did not include Products tab change, just Expense. user said "separate tab".
-    // Wait, the plan only mentioned Customers and Expenses tabs.
-    // I see ProductsPage in the file list. I will stick to two tabs for now as per immediate plan or add products if it makes sense.
-    // Let's stick to Home (Customers) and Expenses.
-    // The HomePage currently has a link to ProductsPage.
-  ];
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
+  static const List<Widget> _pages = [HomePage(), ExpensePage()];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const ShopSelector(),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ProductsPage()),
-              );
-            },
-            icon: const Icon(Icons.inventory_2_outlined, color: Colors.black),
+      backgroundColor: const Color(0xFFF5F8FC),
+      appBar: _selectedIndex == 1
+          ? AppBar(
+              title: const Text('Expenses'),
+              actions: [
+                IconButton(
+                  tooltip: 'Products',
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ProductsPage(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(
+                    Icons.inventory_2_outlined,
+                    color: Colors.black,
+                  ),
+                ),
+              ],
+            )
+          : null,
+      body: IndexedStack(index: _selectedIndex, children: _pages),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Container(
+          height: 69,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(19)),
+            boxShadow: [
+              BoxShadow(
+                color: Color(0x0D25364A),
+                blurRadius: 14,
+                offset: Offset(0, -3),
+              ),
+            ],
           ),
-        ],
+          child: Row(
+            children: [
+              _NavigationItem(
+                icon: Icons.people_alt_outlined,
+                label: 'Customers',
+                selected: _selectedIndex == 0,
+                onTap: () => setState(() => _selectedIndex = 0),
+              ),
+              _NavigationItem(
+                icon: Icons.account_balance_wallet_outlined,
+                label: 'Expenses',
+                selected: _selectedIndex == 1,
+                onTap: () => setState(() => _selectedIndex = 1),
+              ),
+            ],
+          ),
+        ),
       ),
-      body: _pages[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.people_outline),
-            label: 'Customers',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.account_balance_wallet_outlined),
-            label: 'Expenses',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.black,
-        onTap: _onItemTapped,
-        backgroundColor: Colors.white,
-        elevation: 8,
-        showUnselectedLabels: true,
-        type: BottomNavigationBarType.fixed,
+    );
+  }
+}
+
+class _NavigationItem extends StatelessWidget {
+  const _NavigationItem({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = selected ? const Color(0xFF111111) : const Color(0xFF858585);
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: 24),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontSize: 12,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+              ),
+            ),
+            const SizedBox(height: 5),
+            Container(
+              height: 3,
+              width: selected ? 56 : 0,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
