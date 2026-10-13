@@ -13,7 +13,11 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
 
-  static const List<Widget> _pages = [HomePage(), ExpensePage()];
+  static const List<Widget> _pages = [
+    HomePage(),
+    ExpensePage(),
+    ProductsPage(),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -26,12 +30,7 @@ class _MainScreenState extends State<MainScreen> {
                 IconButton(
                   tooltip: 'Products',
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ProductsPage(),
-                      ),
-                    );
+                    setState(() => _selectedIndex = 2);
                   },
                   icon: const Icon(
                     Icons.inventory_2_outlined,
@@ -40,7 +39,9 @@ class _MainScreenState extends State<MainScreen> {
                 ),
               ],
             )
-          : null,
+          : _selectedIndex == 2
+              ? AppBar(title: const Text('Products'))
+              : null,
       body: IndexedStack(index: _selectedIndex, children: _pages),
       bottomNavigationBar: SafeArea(
         top: false,
@@ -70,6 +71,12 @@ class _MainScreenState extends State<MainScreen> {
                 label: 'Expenses',
                 selected: _selectedIndex == 1,
                 onTap: () => setState(() => _selectedIndex = 1),
+              ),
+              _NavigationItem(
+                icon: Icons.inventory_2_outlined,
+                label: 'Products',
+                selected: _selectedIndex == 2,
+                onTap: () => setState(() => _selectedIndex = 2),
               ),
             ],
           ),
