@@ -26,14 +26,14 @@ class _AddPaymentDialogState extends ConsumerState<AddPaymentDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Add Payment'),
+      title: const Text('জমা যোগ করুন'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           TextField(
             controller: amountController,
             decoration: const InputDecoration(
-              hintText: 'Amount (৳)',
+              hintText: 'জমার পরিমাণ (৳)',
               border: UnderlineInputBorder(),
             ),
             keyboardType: TextInputType.number,
@@ -43,7 +43,7 @@ class _AddPaymentDialogState extends ConsumerState<AddPaymentDialog> {
           TextField(
             controller: noteController,
             decoration: const InputDecoration(
-              hintText: 'Note (optional)',
+              hintText: 'নোট (ঐচ্ছিক)',
               border: UnderlineInputBorder(),
             ),
             textCapitalization: TextCapitalization.sentences,
@@ -53,7 +53,7 @@ class _AddPaymentDialogState extends ConsumerState<AddPaymentDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('CANCEL', style: TextStyle(color: Colors.grey)),
+          child: const Text('বাতিল', style: TextStyle(color: Colors.grey)),
         ),
         TextButton(
           onPressed: () {
@@ -76,7 +76,7 @@ class _AddPaymentDialogState extends ConsumerState<AddPaymentDialog> {
             }
           },
           child: const Text(
-            'SAVE',
+            'সংরক্ষণ',
             style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
           ),
         ),

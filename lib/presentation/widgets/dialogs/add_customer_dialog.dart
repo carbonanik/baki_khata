@@ -13,17 +13,20 @@ class AddCustomerDialog extends ConsumerStatefulWidget {
 class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
   final nameController = TextEditingController();
   final phoneController = TextEditingController();
+  final addressController = TextEditingController();
 
   @override
   void dispose() {
     nameController.dispose();
     phoneController.dispose();
+    addressController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      scrollable: true,
       title: const Text('New Customer'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
@@ -45,6 +48,16 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
             ),
             keyboardType: TextInputType.phone,
           ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: addressController,
+            decoration: const InputDecoration(
+              hintText: 'Address (optional)',
+              border: UnderlineInputBorder(),
+            ),
+            textCapitalization: TextCapitalization.sentences,
+            maxLines: 2,
+          ),
         ],
       ),
       actions: [
@@ -54,13 +67,17 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
         ),
         TextButton(
           onPressed: () {
-            if (nameController.text.isNotEmpty &&
-                phoneController.text.isNotEmpty) {
+            final name = nameController.text.trim();
+            final phone = phoneController.text.trim();
+            if (name.isNotEmpty && phone.isNotEmpty) {
               final shop = ref.read(shopProvider);
               final customer = Customer(
                 shopId: shop?.id ?? '',
-                name: nameController.text,
-                phone: phoneController.text,
+                name: name,
+                phone: phone,
+                address: addressController.text.trim().isEmpty
+                    ? null
+                    : addressController.text.trim(),
               );
               ref.read(customerProvider.notifier).addCustomer(customer);
               Navigator.pop(context);

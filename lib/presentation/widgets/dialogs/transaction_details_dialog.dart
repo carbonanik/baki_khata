@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/bengali_formatters.dart';
 import '../../../domain/entities/transaction.dart';
 import '../../../main.dart';
 
@@ -23,13 +24,13 @@ class TransactionDetailsDialog extends StatelessWidget {
 
   Widget _buildSellDetails(BuildContext context) {
     return AlertDialog(
-      title: const Text('Sale Details'),
+      title: const Text('বিক্রির বিবরণ'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            dateFormat.format(transaction.timestamp),
+            formatBengaliDate(transaction.timestamp),
             style: const TextStyle(color: Colors.grey, fontSize: 12),
           ),
           const SizedBox(height: 16),
@@ -40,38 +41,56 @@ class TransactionDetailsDialog extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(item.name),
+                    Expanded(
+                      child: Text(
+                        '${item.name} · ${toBengaliDigits(item.quantity)} ${item.unit}',
+                      ),
+                    ),
                     Text(currencyFormat.format(item.price)),
                   ],
                 ),
               ),
             )
           else
-            const Text('No items recorded'),
+            const Text('কোনো পণ্য যোগ করা হয়নি'),
           const Divider(),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'Total:',
+                'মোট বিল:',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               Text(
-                currencyFormat.format(transaction.totalAmount),
+                currencyFormat.format(transaction.grossAmount),
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ],
           ),
+          if (transaction.discountAmount > 0) ...[
+            const SizedBox(height: 8),
+            _detailRow(
+              'ছাড়',
+              -transaction.discountAmount,
+              color: const Color(0xFFB20E42),
+            ),
+            const SizedBox(height: 8),
+            _detailRow(
+              'প্রদেয় টাকা',
+              transaction.totalAmount,
+              isBold: true,
+            ),
+          ],
           const SizedBox(height: 8),
-          _detailRow('Paid', transaction.paidAmount, color: Colors.green),
+          _detailRow('জমা', transaction.paidAmount, color: Colors.green),
           const SizedBox(height: 8),
-          _detailRow('Due', transaction.dueAmount, color: Colors.red),
+          _detailRow('বাকি', transaction.dueAmount, color: Colors.red),
         ],
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('CLOSE'),
+          child: const Text('বন্ধ করুন'),
         ),
       ],
     );
@@ -95,20 +114,20 @@ class TransactionDetailsDialog extends StatelessWidget {
     final dueAfter = dueBefore - paymentAmount;
 
     return AlertDialog(
-      title: const Text('Payment Details'),
+      title: const Text('জমার বিবরণ'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            dateFormat.format(transaction.timestamp),
+            formatBengaliDate(transaction.timestamp),
             style: const TextStyle(color: Colors.grey, fontSize: 12),
           ),
           const SizedBox(height: 20),
-          _detailRow('Due before payment', dueBefore),
+          _detailRow('জমার আগে বাকি', dueBefore),
           const SizedBox(height: 8),
           _detailRow(
-            'Payment Amount',
+            'জমার পরিমাণ',
             paymentAmount,
             isBold: true,
             color: Colors.green,
@@ -116,11 +135,11 @@ class TransactionDetailsDialog extends StatelessWidget {
           const SizedBox(height: 8),
           const Divider(),
           const SizedBox(height: 8),
-          _detailRow('Due after payment', dueAfter, isBold: true),
+          _detailRow('জমার পরে বাকি', dueAfter, isBold: true),
           if (transaction.note != null && transaction.note!.isNotEmpty) ...[
             const SizedBox(height: 16),
             const Text(
-              "Note:",
+              'নোট:',
               style: TextStyle(fontSize: 12, color: Colors.grey),
             ),
             Text(transaction.note!),
@@ -130,7 +149,7 @@ class TransactionDetailsDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('CLOSE'),
+          child: const Text('বন্ধ করুন'),
         ),
       ],
     );
@@ -147,7 +166,7 @@ class TransactionDetailsDialog extends StatelessWidget {
       children: [
         Text(label, style: const TextStyle(color: Colors.grey)),
         Text(
-          currencyFormat.format(amount),
+          currencyFormat.format(amount.abs()),
           style: TextStyle(
             fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
             color: color ?? Colors.black,

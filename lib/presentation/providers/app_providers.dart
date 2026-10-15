@@ -97,6 +97,7 @@ class TransactionNotifier extends StateNotifier<List<Transaction>> {
       type: transaction.type,
       items: transaction.items,
       totalAmount: transaction.totalAmount,
+      discountAmount: transaction.discountAmount,
       paidAmount: transaction.paidAmount,
       note: transaction.note,
       timestamp: transaction.timestamp,

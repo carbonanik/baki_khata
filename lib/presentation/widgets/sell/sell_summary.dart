@@ -1,13 +1,25 @@
 import 'package:baki_khata/main.dart';
 import 'package:flutter/material.dart';
+import '../../../core/utils/bengali_formatters.dart';
+
+const _green = Color(0xFF006B4F);
+const _ink = Color(0xFF172333);
+const _muted = Color(0xFF75808D);
 
 class SellSummary extends StatelessWidget {
+  final double grossAmount;
+  final double discountAmount;
   final double totalAmount;
   final double dueAmount;
+  final double customerDue;
+  final bool hasExcessDiscount;
+  final bool hasExcessPaid;
   final int itemCount;
   final bool isFullPaid;
+  final TextEditingController discountController;
   final TextEditingController paidController;
   final TextEditingController noteController;
+  final VoidCallback onDiscountChanged;
   final VoidCallback onPaidChanged;
   final VoidCallback onClearPaid;
   final VoidCallback onNoteChanged;
@@ -15,12 +27,19 @@ class SellSummary extends StatelessWidget {
 
   const SellSummary({
     super.key,
+    required this.grossAmount,
+    required this.discountAmount,
     required this.totalAmount,
     required this.dueAmount,
+    required this.customerDue,
+    required this.hasExcessDiscount,
+    required this.hasExcessPaid,
     required this.itemCount,
     required this.isFullPaid,
+    required this.discountController,
     required this.paidController,
     required this.noteController,
+    required this.onDiscountChanged,
     required this.onPaidChanged,
     required this.onClearPaid,
     required this.onNoteChanged,
@@ -32,199 +51,274 @@ class SellSummary extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFEDF4FF), Color(0xFFF8FAFD)],
-        ),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF8795AC).withValues(alpha: 0.09),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 46,
-                height: 46,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFD9E7FF),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const Icon(
-                  Icons.receipt_long_outlined,
-                  color: Color(0xFF1557D5),
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text(
-                  'Summary',
-                  style: TextStyle(
-                    color: Color(0xFF111827),
-                    fontSize: 21,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              TextButton.icon(
-                onPressed: () => _editNote(context),
-                icon: const Icon(Icons.edit_outlined, size: 17),
-                label: Text(
-                  noteController.text.trim().isEmpty ? 'Add Note' : 'Edit Note',
-                ),
-                style: TextButton.styleFrom(
-                  foregroundColor: const Color(0xFF1557D5),
-                  backgroundColor: const Color(0xFFF7FAFF),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 8,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(11),
-                  ),
-                  textStyle: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
+          _AmountRow(
+            label: 'মোট বিল (${toBengaliDigits(itemCount)}টি)',
+            amount: grossAmount,
+            color: _muted,
           ),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  const Text(
-                    'Total',
-                    style: TextStyle(
-                      color: Color(0xFF111827),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(width: 7),
-                  Text(
-                    '($itemCount ${itemCount == 1 ? 'item' : 'items'})',
-                    style: const TextStyle(
-                      color: Color(0xFF7B8798),
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-              Text(
-                currencyFormat.format(totalAmount),
-                style: const TextStyle(
-                  color: Color(0xFF111827),
-                  fontSize: 19,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           const Text(
-            'Paid',
+            'ছাড় / ডিসকাউন্ট',
             style: TextStyle(
-              color: Color(0xFF778294),
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
+              color: Color(0xFFB20E42),
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 7),
+          const SizedBox(height: 6),
           Row(
             children: [
               Expanded(
+                child: Text(
+                  'ছাড়ের পরিমাণ: ${currencyFormat.format(discountAmount)}',
+                  style: const TextStyle(
+                    color: Color(0xFFB20E42),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              SizedBox(
+                width: 125,
                 child: TextField(
-                  controller: paidController,
+                  controller: discountController,
+                  textAlign: TextAlign.end,
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
-                  enabled: !isFullPaid,
-                  onChanged: (_) => onPaidChanged(),
+                  onChanged: (_) => onDiscountChanged(),
                   style: const TextStyle(
-                    color: Color(0xFF111827),
-                    fontSize: 17,
-                    fontWeight: FontWeight.w500,
+                    color: Color(0xFFB20E42),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
                   ),
                   decoration: InputDecoration(
                     prefixText: '৳ ',
-                    hintText: '0',
-                    filled: true,
-                    fillColor: Colors.white,
+                    hintText: '০',
                     isDense: true,
+                    filled: true,
+                    fillColor: const Color(0xFFFFF2F4),
                     contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 13,
+                      horizontal: 10,
+                      vertical: 11,
                     ),
-                    enabledBorder: OutlineInputBorder(
+                    border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(11),
-                      borderSide: const BorderSide(color: Color(0xFFDCE3ED)),
-                    ),
-                    disabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(11),
-                      borderSide: const BorderSide(color: Color(0xFFDCE3ED)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(11),
-                      borderSide: const BorderSide(
-                        color: Color(0xFF8EAFE8),
-                        width: 1.3,
-                      ),
+                      borderSide: BorderSide.none,
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
-              _CompactAction(
-                label: 'Full Paid',
-                selected: isFullPaid,
-                onPressed: () => onFullPaidChanged(!isFullPaid),
-              ),
-              const SizedBox(width: 6),
-              _CompactAction(label: 'Clear', onPressed: onClearPaid),
             ],
           ),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 19),
-            child: Divider(height: 1, color: Color(0xFFD9E1EB)),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Due',
-                style: TextStyle(
-                  color: Color(0xFF111827),
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                ),
+          if (hasExcessDiscount)
+            const Padding(
+              padding: EdgeInsets.only(top: 4),
+              child: Text(
+                'ছাড়ের পরিমাণ মোট বিলের বেশি হতে পারবে না।',
+                style: TextStyle(color: Color(0xFFB20E42), fontSize: 12),
               ),
-              Text(
-                currencyFormat.format(dueAmount),
-                style: TextStyle(
-                  color: dueAmount > 0
-                      ? const Color(0xFFE04B4B)
-                      : const Color(0xFF2FA757),
-                  fontSize: 19,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-          if (noteController.text.trim().isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Text(
-              noteController.text,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: Color(0xFF778294), fontSize: 13),
             ),
-          ],
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF0F3FF),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: _AmountRow(
+              label: 'প্রদেয় টাকা',
+              amount: totalAmount,
+              color: _green,
+              large: true,
+            ),
+          ),
+          const SizedBox(height: 17),
+          Container(
+            padding: const EdgeInsets.all(13),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF0F3FF),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'জমা পেয়েছেন',
+                        style: TextStyle(
+                          color: _ink,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    _CompactAction(
+                      label: 'পুরো পরিশোধ',
+                      selected: isFullPaid,
+                      onPressed: () => onFullPaidChanged(!isFullPaid),
+                    ),
+                  ],
+                ),
+                if (hasExcessPaid)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 5),
+                    child: Text(
+                      'জমার পরিমাণ প্রদেয় টাকার বেশি হতে পারবে না।',
+                      style: TextStyle(
+                        color: Color(0xFFB20E42),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: paidController,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        enabled: !isFullPaid,
+                        onChanged: (_) => onPaidChanged(),
+                        style: const TextStyle(
+                          color: _ink,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        decoration: InputDecoration(
+                          prefixText: '৳ ',
+                          hintText: '০',
+                          filled: true,
+                          fillColor: Colors.white,
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 13,
+                            vertical: 14,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 7),
+                    IconButton(
+                      onPressed: onClearPaid,
+                      tooltip: 'জমার পরিমাণ মুছুন',
+                      icon: const Icon(Icons.backspace_outlined),
+                      color: _muted,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(13),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFE3E5),
+                    borderRadius: BorderRadius.circular(13),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.warning_amber_rounded,
+                        color: Color(0xFFB20E42),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'নতুন বাকি যোগ হবে',
+                              style: TextStyle(
+                                color: Color(0xFF9B123D),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              'কাস্টমারের মোট বাকি: ${currencyFormat.format(customerDue)}',
+                              style: const TextStyle(
+                                color: _ink,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 7),
+                      Text(
+                        currencyFormat.format(dueAmount),
+                        style: const TextStyle(
+                          color: Color(0xFFB20E42),
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 15),
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'লেনদেনের বিবরণ / বিশেষ নোট (ঐচ্ছিক)',
+                  style: TextStyle(
+                    color: _muted,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () => _editNote(context),
+                child: Text(
+                  noteController.text.trim().isEmpty ? 'যোগ করুন' : 'সম্পাদনা',
+                  style: const TextStyle(color: _green),
+                ),
+              ),
+            ],
+          ),
+          TextField(
+            controller: noteController,
+            onChanged: (_) => onNoteChanged(),
+            textCapitalization: TextCapitalization.sentences,
+            maxLines: 2,
+            decoration: InputDecoration(
+              hintText: 'যেমন: বাকি টাকা পরে দেবেন',
+              prefixIcon: const Icon(Icons.notes_rounded, color: _muted),
+              filled: true,
+              fillColor: const Color(0xFFF0F3FF),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(13),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -234,26 +328,66 @@ class SellSummary extends StatelessWidget {
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Sale note'),
+        title: const Text('লেনদেনের নোট'),
         content: TextField(
           controller: noteController,
           autofocus: true,
           maxLines: 3,
           textCapitalization: TextCapitalization.sentences,
           decoration: const InputDecoration(
-            hintText: 'Add an optional note',
+            hintText: 'ঐচ্ছিক নোট লিখুন',
             border: OutlineInputBorder(),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Done'),
+            child: const Text('সম্পন্ন'),
           ),
         ],
       ),
     );
     onNoteChanged();
+  }
+}
+
+class _AmountRow extends StatelessWidget {
+  final String label;
+  final double amount;
+  final Color color;
+  final bool large;
+
+  const _AmountRow({
+    required this.label,
+    required this.amount,
+    required this.color,
+    this.large = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: large ? 16 : 14,
+              fontWeight: large ? FontWeight.w700 : FontWeight.w500,
+            ),
+          ),
+        ),
+        Text(
+          currencyFormat.format(amount),
+          style: TextStyle(
+            color: color,
+            fontSize: large ? 23 : 17,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -273,14 +407,14 @@ class _CompactAction extends StatelessWidget {
     return TextButton(
       onPressed: onPressed,
       style: TextButton.styleFrom(
-        foregroundColor: selected ? Colors.white : const Color(0xFF343B46),
+        foregroundColor: selected ? Colors.white : _green,
         backgroundColor: selected
-            ? const Color(0xFF111315)
-            : const Color(0xFFEAF0F9),
-        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 12),
-        minimumSize: const Size(0, 44),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+            ? _green
+            : const Color(0xFFDDF8EC),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        minimumSize: const Size(0, 35),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
       ),
       child: Text(label),
     );
