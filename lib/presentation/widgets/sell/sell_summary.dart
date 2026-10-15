@@ -128,12 +128,8 @@ class SellSummary extends StatelessWidget {
               ),
             ),
           const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF0F3FF),
-              borderRadius: BorderRadius.circular(14),
-            ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2),
             child: _AmountRow(
               label: 'প্রদেয় টাকা',
               amount: totalAmount,
@@ -142,139 +138,121 @@ class SellSummary extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 17),
-          Container(
-            padding: const EdgeInsets.all(13),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF0F3FF),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Expanded(
-                      child: Text(
-                        'জমা পেয়েছেন',
-                        style: TextStyle(
-                          color: _ink,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    _CompactAction(
-                      label: 'পুরো পরিশোধ',
-                      selected: isFullPaid,
-                      onPressed: () => onFullPaidChanged(!isFullPaid),
-                    ),
-                  ],
-                ),
-                if (hasExcessPaid)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 5),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Expanded(
                     child: Text(
-                      'জমার পরিমাণ প্রদেয় টাকার বেশি হতে পারবে না।',
+                      'জমা পেয়েছেন',
                       style: TextStyle(
-                        color: Color(0xFFB20E42),
-                        fontSize: 12,
+                        color: _ink,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
-                const SizedBox(height: 8),
-                Row(
+                  _CompactAction(
+                    label: 'পুরো পরিশোধ',
+                    selected: isFullPaid,
+                    onPressed: () => onFullPaidChanged(!isFullPaid),
+                  ),
+                ],
+              ),
+              if (hasExcessPaid)
+                const Padding(
+                  padding: EdgeInsets.only(top: 5),
+                  child: Text(
+                    'জমার পরিমাণ প্রদেয় টাকার বেশি হতে পারবে না।',
+                    style: TextStyle(color: Color(0xFFB20E42), fontSize: 12),
+                  ),
+                ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: paidController,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      enabled: !isFullPaid,
+                      onChanged: (_) => onPaidChanged(),
+                      style: const TextStyle(
+                        color: _ink,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      decoration: InputDecoration(
+                        prefixText: '৳ ',
+                        hintText: '০',
+                        filled: true,
+                        fillColor: const Color(0xFFF6F8FC),
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 13,
+                          vertical: 14,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 7),
+                  IconButton(
+                    onPressed: onClearPaid,
+                    tooltip: 'জমার পরিমাণ মুছুন',
+                    icon: const Icon(Icons.backspace_outlined),
+                    color: _muted,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Row(
                   children: [
+                    const Icon(
+                      Icons.warning_amber_rounded,
+                      color: Color(0xFFB20E42),
+                    ),
+                    const SizedBox(width: 8),
                     Expanded(
-                      child: TextField(
-                        controller: paidController,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        enabled: !isFullPaid,
-                        onChanged: (_) => onPaidChanged(),
-                        style: const TextStyle(
-                          color: _ink,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                        ),
-                        decoration: InputDecoration(
-                          prefixText: '৳ ',
-                          hintText: '০',
-                          filled: true,
-                          fillColor: Colors.white,
-                          isDense: true,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 13,
-                            vertical: 14,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'নতুন বাকি যোগ হবে',
+                            style: TextStyle(
+                              color: Color(0xFF9B123D),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
+                          const SizedBox(height: 3),
+                          Text(
+                            'কাস্টমারের মোট বাকি: ${currencyFormat.format(customerDue)}',
+                            style: const TextStyle(color: _ink, fontSize: 12),
                           ),
-                        ),
+                        ],
                       ),
                     ),
                     const SizedBox(width: 7),
-                    IconButton(
-                      onPressed: onClearPaid,
-                      tooltip: 'জমার পরিমাণ মুছুন',
-                      icon: const Icon(Icons.backspace_outlined),
-                      color: _muted,
+                    Text(
+                      currencyFormat.format(dueAmount),
+                      style: const TextStyle(
+                        color: Color(0xFFB20E42),
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(13),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFE3E5),
-                    borderRadius: BorderRadius.circular(13),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.warning_amber_rounded,
-                        color: Color(0xFFB20E42),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'নতুন বাকি যোগ হবে',
-                              style: TextStyle(
-                                color: Color(0xFF9B123D),
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: 3),
-                            Text(
-                              'কাস্টমারের মোট বাকি: ${currencyFormat.format(customerDue)}',
-                              style: const TextStyle(
-                                color: _ink,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 7),
-                      Text(
-                        currencyFormat.format(dueAmount),
-                        style: const TextStyle(
-                          color: Color(0xFFB20E42),
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
           const SizedBox(height: 15),
           Row(
@@ -403,9 +381,7 @@ class _CompactAction extends StatelessWidget {
       onPressed: onPressed,
       style: TextButton.styleFrom(
         foregroundColor: selected ? Colors.white : _green,
-        backgroundColor: selected
-            ? _green
-            : const Color(0xFFDDF8EC),
+        backgroundColor: selected ? _green : const Color(0xFFDDF8EC),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
         minimumSize: const Size(0, 35),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
