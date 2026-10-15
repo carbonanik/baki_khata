@@ -11,25 +11,30 @@ class TransactionTile extends StatelessWidget {
     final isSell = transaction.type == TransactionType.sell;
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.symmetric(vertical: 14),
       decoration: const BoxDecoration(
         border: Border(bottom: BorderSide(color: Color(0xFFF0F0F0))),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            width: 50,
+            height: 50,
             decoration: BoxDecoration(
-              color: isSell ? Colors.orange.shade50 : Colors.green.shade50,
+              color: isSell
+                  ? const Color(0xFFFFF2E2)
+                  : const Color(0xFFEAF7EF),
               shape: BoxShape.circle,
             ),
             child: Icon(
               isSell ? Icons.shopping_basket_outlined : Icons.payments_outlined,
-              size: 20,
-              color: isSell ? Colors.orange.shade800 : Colors.green.shade800,
+              size: 24,
+              color: isSell
+                  ? const Color(0xFFF07816)
+                  : const Color(0xFF279B51),
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -38,13 +43,25 @@ class TransactionTile extends StatelessWidget {
                   isSell ? 'Sale' : 'Payment Received',
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
-                    fontSize: 14,
+                    fontSize: 15,
                   ),
                 ),
                 Text(
                   dateFormat.format(transaction.timestamp),
-                  style: const TextStyle(color: Colors.grey, fontSize: 11),
+                  style: const TextStyle(
+                    color: Color(0xFF8792A2),
+                    fontSize: 12,
+                  ),
                 ),
+                if (isSell && transaction.items != null)
+                  Text(
+                    '${transaction.items!.length} '
+                    '${transaction.items!.length == 1 ? 'item' : 'items'}',
+                    style: const TextStyle(
+                      color: Color(0xFF8792A2),
+                      fontSize: 12,
+                    ),
+                  ),
                 if (transaction.note != null && transaction.note!.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
@@ -52,7 +69,7 @@ class TransactionTile extends StatelessWidget {
                       transaction.note!,
                       style: const TextStyle(
                         fontStyle: FontStyle.italic,
-                        color: Colors.grey,
+                        color: Color(0xFF8792A2),
                         fontSize: 12,
                       ),
                       maxLines: 1,
@@ -79,13 +96,15 @@ class TransactionTile extends StatelessWidget {
                 Text(
                   'DUE: ${currencyFormat.format(transaction.dueAmount)}',
                   style: const TextStyle(
-                    fontSize: 10,
-                    color: Colors.red,
+                    fontSize: 11,
+                    color: Color(0xFFE83F3C),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
             ],
           ),
+          const SizedBox(width: 6),
+          const Icon(Icons.chevron_right, color: Color(0xFF8792A2), size: 22),
         ],
       ),
     );

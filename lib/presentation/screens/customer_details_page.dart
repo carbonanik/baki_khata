@@ -9,138 +9,227 @@ import '../widgets/customer/transaction_tile.dart';
 import '../widgets/dialogs/add_payment_dialog.dart';
 import '../widgets/dialogs/transaction_details_dialog.dart';
 
-class CustomerDetailsPage extends ConsumerWidget {
+class CustomerDetailsPage extends ConsumerStatefulWidget {
   final Customer customer;
   const CustomerDetailsPage({super.key, required this.customer});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CustomerDetailsPage> createState() =>
+      _CustomerDetailsPageState();
+}
+
+class _CustomerDetailsPageState extends ConsumerState<CustomerDetailsPage> {
+  bool _showAllTransactions = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final customer = widget.customer;
     final transactions = ref.watch(customerTransactionsProvider(customer.id));
     final due = ref.watch(customerDueProvider(customer.id));
 
     double totalSell = 0;
     double totalPaid = 0;
-    for (var t in transactions) {
-      if (t.type == TransactionType.sell) {
-        totalSell += t.totalAmount;
-        totalPaid += t.paidAmount;
-      } else {
-        totalPaid += t.paidAmount;
+    for (final transaction in transactions) {
+      if (transaction.type == TransactionType.sell) {
+        totalSell += transaction.totalAmount;
       }
+      totalPaid += transaction.paidAmount;
     }
 
+    final visibleTransactions = _showAllTransactions
+        ? transactions
+        : transactions.take(3).toList();
+
     return Scaffold(
-      appBar: AppBar(title: Text(customer.name)),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => showDialog(
-                    context: context,
-                    builder: (context) => AddPaymentDialog(customer: customer),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Colors.black),
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text(
-                    'ADD PAYMENT',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
+      backgroundColor: const Color(0xFFF7F9FC),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFFF7F9FC),
+        titleSpacing: 0,
+        title: Row(
+          children: [
+            CircleAvatar(
+              radius: 24,
+              backgroundColor: const Color(0xFFE2ECFF),
+              child: Text(
+                customer.name.trim().isEmpty
+                    ? '?'
+                    : customer.name.trim()[0].toUpperCase(),
+                style: const TextStyle(
+                  color: Color(0xFF1557D5),
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AddSellPage(customer: customer),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    customer.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Color(0xFF111827),
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
                     ),
-                    elevation: 0,
                   ),
-                  child: const Text(
-                    'ADD SELL',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                  Text(
+                    customer.phone,
+                    style: const TextStyle(
+                      color: Color(0xFF8792A2),
+                      fontSize: 14,
+                    ),
                   ),
-                ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-      body: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: CustomerSummaryCard(
-                totalSell: totalSell,
-                totalPaid: totalPaid,
-                due: due,
-              ),
-            ),
-          ),
-          const SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              child: Text(
-                'TRANSACTIONS',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.grey,
+      bottomNavigationBar: SafeArea(
+        minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        child: Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () => showDialog(
+                  context: context,
+                  builder: (context) => AddPaymentDialog(customer: customer),
+                ),
+                icon: const Icon(Icons.payments_outlined, size: 20),
+                label: const Text('Add Payment'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF111827),
+                  side: const BorderSide(color: Color(0xFF222222)),
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  textStyle: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
-          ),
-          if (transactions.isEmpty)
-            const SliverFillRemaining(
-              child: Center(
-                child: Text(
-                  'No transactions yet',
-                  style: TextStyle(color: Colors.grey),
-                ),
-              ),
-            )
-          else
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  final transaction = transactions[index];
-                  return InkWell(
-                    onTap: () => showDialog(
-                      context: context,
-                      builder: (context) => TransactionDetailsDialog(
-                        transaction: transaction,
-                        allTransactions: transactions,
-                      ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AddSellPage(customer: customer),
                     ),
-                    child: TransactionTile(transaction: transaction),
                   );
-                }, childCount: transactions.length),
+                },
+                icon: const Icon(Icons.add, size: 22),
+                label: const Text('Add Sell'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF111315),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                  textStyle: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ),
-          const SliverPadding(padding: EdgeInsets.only(bottom: 100)),
-        ],
+          ],
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CustomerSummaryCard(
+              totalSell: totalSell,
+              totalPaid: totalPaid,
+              due: due,
+            ),
+            const SizedBox(height: 22),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Recent Transactions',
+                  style: TextStyle(
+                    fontSize: 19,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF111827),
+                  ),
+                ),
+                if (transactions.length > 3)
+                  TextButton(
+                    onPressed: () => setState(
+                      () => _showAllTransactions = !_showAllTransactions,
+                    ),
+                    style: TextButton.styleFrom(
+                      foregroundColor: const Color(0xFF244674),
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      minimumSize: const Size(0, 36),
+                    ),
+                    child: Text(
+                      _showAllTransactions ? 'Show Less' : 'View All',
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF9EACC2).withValues(alpha: 0.12),
+                    blurRadius: 22,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: transactions.isEmpty
+                  ? const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 30),
+                      child: Center(
+                        child: Text(
+                          'No transactions yet',
+                          style: TextStyle(
+                            color: Color(0xFF8792A2),
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    )
+                  : Column(
+                      children: visibleTransactions.map((transaction) {
+                        return InkWell(
+                          onTap: () => showDialog(
+                            context: context,
+                            builder: (context) => TransactionDetailsDialog(
+                              transaction: transaction,
+                              allTransactions: transactions,
+                            ),
+                          ),
+                          child: TransactionTile(transaction: transaction),
+                        );
+                      }).toList(),
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -3,206 +3,286 @@ import 'package:flutter/material.dart';
 
 class SellSummary extends StatelessWidget {
   final double totalAmount;
-  final double paidAmount;
   final double dueAmount;
+  final int itemCount;
   final bool isFullPaid;
   final TextEditingController paidController;
   final TextEditingController noteController;
   final VoidCallback onPaidChanged;
+  final VoidCallback onClearPaid;
+  final VoidCallback onNoteChanged;
   final ValueChanged<bool> onFullPaidChanged;
 
   const SellSummary({
     super.key,
     required this.totalAmount,
-    required this.paidAmount,
     required this.dueAmount,
+    required this.itemCount,
     required this.isFullPaid,
     required this.paidController,
     required this.noteController,
     required this.onPaidChanged,
+    required this.onClearPaid,
+    required this.onNoteChanged,
     required this.onFullPaidChanged,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20.0),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: Colors.grey[200]!),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-        borderRadius: BorderRadius.circular(12),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFEDF4FF), Color(0xFFF8FAFD)],
+        ),
+        borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Total Amount
-          _summaryRow(
-            'Total',
-            totalAmount,
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
-
-          const SizedBox(height: 24),
-
-          // Paid Amount with Full Paid Toggle
           Row(
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Paid',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey[600],
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: paidController,
-                      keyboardType: TextInputType.number,
-                      enabled: !isFullPaid,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: isFullPaid ? Colors.grey[400] : Colors.black87,
-                      ),
-                      decoration: InputDecoration(
-                        prefixText: '৳ ',
-                        prefixStyle: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: isFullPaid ? Colors.grey[400] : Colors.black87,
-                        ),
-                        // border: InputBorder.none,
-                        hintText: '0',
-                        hintStyle: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: isFullPaid ? Colors.grey[400] : Colors.black87,
-                        ),
-                        contentPadding: EdgeInsets.zero,
-                        isDense: true,
-                      ),
-                      onChanged: (_) => onPaidChanged(),
-                    ),
-                  ],
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFD9E7FF),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Icon(
+                  Icons.receipt_long_outlined,
+                  color: Color(0xFF1557D5),
+                  size: 24,
                 ),
               ),
-
-              // Full Paid Chip
-              GestureDetector(
-                onTap: () => onFullPaidChanged(!isFullPaid),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Summary',
+                  style: TextStyle(
+                    color: Color(0xFF111827),
+                    fontSize: 21,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              TextButton.icon(
+                onPressed: () => _editNote(context),
+                icon: const Icon(Icons.edit_outlined, size: 17),
+                label: Text(
+                  noteController.text.trim().isEmpty ? 'Add Note' : 'Edit Note',
+                ),
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFF1557D5),
+                  backgroundColor: const Color(0xFFF7FAFF),
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
+                    horizontal: 10,
                     vertical: 8,
                   ),
-                  decoration: BoxDecoration(
-                    color: isFullPaid ? Colors.black : Colors.grey[100],
-                    borderRadius: BorderRadius.circular(20),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(11),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        isFullPaid ? Icons.check_circle : Icons.circle_outlined,
-                        size: 16,
-                        color: isFullPaid ? Colors.white : Colors.grey[600],
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Full Paid',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: isFullPaid ? Colors.white : Colors.grey[700],
-                        ),
-                      ),
-                    ],
+                  textStyle: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
             ],
           ),
-
-          const SizedBox(height: 24),
-
-          // Note Field
-          TextField(
-            controller: noteController,
-            style: const TextStyle(fontSize: 14),
-            decoration: InputDecoration(
-              hintText: 'Note (optional)',
-              hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
-              // border: InputBorder.none,
-              contentPadding: EdgeInsets.zero,
-              isDense: true,
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Text(
+                    'Total',
+                    style: TextStyle(
+                      color: Color(0xFF111827),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(width: 7),
+                  Text(
+                    '($itemCount ${itemCount == 1 ? 'item' : 'items'})',
+                    style: const TextStyle(
+                      color: Color(0xFF7B8798),
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+              Text(
+                currencyFormat.format(totalAmount),
+                style: const TextStyle(
+                  color: Color(0xFF111827),
+                  fontSize: 19,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Paid',
+            style: TextStyle(
+              color: Color(0xFF778294),
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
             ),
-            textCapitalization: TextCapitalization.sentences,
-            maxLines: 2,
           ),
-
-          const SizedBox(height: 24),
-
-          // Divider
-          // Container(height: 1, color: Colors.grey[200]),
-          // Divider(),
-
-          // const SizedBox(height: 24),
-
-          // Due Amount
-          _summaryRow(
-            'Due',
-            dueAmount,
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            valueColor: dueAmount > 0 ? Colors.red[600] : Colors.green[600],
+          const SizedBox(height: 7),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: paidController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  enabled: !isFullPaid,
+                  onChanged: (_) => onPaidChanged(),
+                  style: const TextStyle(
+                    color: Color(0xFF111827),
+                    fontSize: 17,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  decoration: InputDecoration(
+                    prefixText: '৳ ',
+                    hintText: '0',
+                    filled: true,
+                    fillColor: Colors.white,
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 13,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(11),
+                      borderSide: const BorderSide(color: Color(0xFFDCE3ED)),
+                    ),
+                    disabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(11),
+                      borderSide: const BorderSide(color: Color(0xFFDCE3ED)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(11),
+                      borderSide: const BorderSide(
+                        color: Color(0xFF8EAFE8),
+                        width: 1.3,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              _CompactAction(
+                label: 'Full Paid',
+                selected: isFullPaid,
+                onPressed: () => onFullPaidChanged(!isFullPaid),
+              ),
+              const SizedBox(width: 6),
+              _CompactAction(label: 'Clear', onPressed: onClearPaid),
+            ],
           ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 19),
+            child: Divider(height: 1, color: Color(0xFFD9E1EB)),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Due',
+                style: TextStyle(
+                  color: Color(0xFF111827),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              Text(
+                currencyFormat.format(dueAmount),
+                style: TextStyle(
+                  color: dueAmount > 0
+                      ? const Color(0xFFE04B4B)
+                      : const Color(0xFF2FA757),
+                  fontSize: 19,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          if (noteController.text.trim().isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              noteController.text,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: Color(0xFF778294), fontSize: 13),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _summaryRow(
-    String label,
-    double amount, {
-    double fontSize = 14,
-    FontWeight fontWeight = FontWeight.w500,
-    Color? valueColor,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.baseline,
-      textBaseline: TextBaseline.alphabetic,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: fontSize,
-            fontWeight: fontWeight,
-            color: Colors.grey[700],
+  Future<void> _editNote(BuildContext context) async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Sale note'),
+        content: TextField(
+          controller: noteController,
+          autofocus: true,
+          maxLines: 3,
+          textCapitalization: TextCapitalization.sentences,
+          decoration: const InputDecoration(
+            hintText: 'Add an optional note',
+            border: OutlineInputBorder(),
           ),
         ),
-        Text(
-          currencyFormat.format(amount),
-          style: TextStyle(
-            fontSize: fontSize + 2,
-            fontWeight: FontWeight.w700,
-            color: valueColor ?? Colors.black87,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Done'),
           ),
-        ),
-      ],
+        ],
+      ),
+    );
+    onNoteChanged();
+  }
+}
+
+class _CompactAction extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onPressed;
+
+  const _CompactAction({
+    required this.label,
+    this.selected = false,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      onPressed: onPressed,
+      style: TextButton.styleFrom(
+        foregroundColor: selected ? Colors.white : const Color(0xFF343B46),
+        backgroundColor: selected
+            ? const Color(0xFF111315)
+            : const Color(0xFFEAF0F9),
+        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 12),
+        minimumSize: const Size(0, 44),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+      ),
+      child: Text(label),
     );
   }
 }

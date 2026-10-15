@@ -20,98 +20,145 @@ class SellItemRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F9FB),
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Row(
-        // crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '${index + 1}.',
-            style: const TextStyle(fontWeight: FontWeight.bold),
+          Container(
+            width: 34,
+            height: 34,
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(
+              color: Color(0xFFEEF1F5),
+              shape: BoxShape.circle,
+            ),
+            child: Text(
+              '${index + 1}',
+              style: const TextStyle(
+                color: Color(0xFF343B46),
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           Expanded(
-            flex: 2,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Autocomplete<Product>(
                   optionsBuilder: (TextEditingValue textEditingValue) {
-                    if (textEditingValue.text == '') {
+                    if (textEditingValue.text.isEmpty) {
                       return const Iterable<Product>.empty();
                     }
-                    return products.where((Product option) {
-                      return option.name.toLowerCase().contains(
+                    return products.where(
+                      (product) => product.name.toLowerCase().contains(
                         textEditingValue.text.toLowerCase(),
-                      );
-                    });
+                      ),
+                    );
                   },
-                  displayStringForOption: (Product option) => option.name,
-                  onSelected: (Product selection) {
+                  displayStringForOption: (product) => product.name,
+                  onSelected: (selection) {
                     rowData.nameController.text = selection.name;
                     rowData.priceController.text = selection.price
                         .toStringAsFixed(0);
                     onCalculated();
-                    // Move focus to price if needed, or next row
                   },
-                  fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
-                    // Sync the local controller with the passed one if needed,
-                    // but Autocomplete uses its own.
-                    // We need to keep our rowData controller in sync or just use only one.
-                    // The simplest way with Autocomplete is to use its controller for the text
-                    // but we need to store the value.
-                    // Actually, let's use a simple TextField with a specialized suggestion view or just TypeAhead.
-                    // Since we want to stick to standard widgets and exact logic extraction:
-                    // The original code used a TypeAheadField or similar?
-                    // Original code snippet for AddSellPage wasn't fully shown in "viewed_code_item" regarding Autocomplete implementation details.
-                    // Let's assume standard formatting.
-                    // Wait, I should check how it was implemented in `add_sell_page.dart`.
-                    // The `viewed_file` summary says "manages text controllers".
-                    // I'll stick to simple TextFields for now as shown in similar apps, or if I can't see the exact implementation, generic TextField is safe.
-                    // But wait, the user wants "Refactor". I must preserve functionality.
-                    // Deepmind's prompt said "Refactor existing...".
-                    // I'll read `add_sell_page.dart` fully first to be sure about Autocomplete.
-                    // I'll use a placeholder implementation for now and fix it in the next turn if I see complex logic.
-                    // Actually, standard `TextField` is safe if I don't recall Autocomplete being there.
-                    // Let's use `TextField` for item name.
-
-                    return TextField(
-                      controller: rowData.nameController,
-                      focusNode: rowData.focusNode,
-                      decoration: const InputDecoration(
-                        hintText: 'Item Name',
-                        // border: UnderlineInputBorder(),
-                        border: InputBorder.none,
-                        isDense: true,
+                  fieldViewBuilder:
+                      (context, textEditingController, focusNode, onSubmitted) {
+                        return TextField(
+                          controller: textEditingController,
+                          focusNode: focusNode,
+                          onChanged: (value) {
+                            rowData.nameController.text = value;
+                            onCalculated();
+                          },
+                          textCapitalization: TextCapitalization.sentences,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: 'Item name',
+                            hintStyle: const TextStyle(
+                              color: Color(0xFF9AA3B0),
+                              fontSize: 15,
+                            ),
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 5,
+                            ),
+                            border: InputBorder.none,
+                            suffixIcon: textEditingController.text.isNotEmpty
+                                ? null
+                                : const Icon(
+                                    Icons.search,
+                                    size: 18,
+                                    color: Color(0xFF9AA3B0),
+                                  ),
+                          ),
+                        );
+                      },
+                ),
+                const SizedBox(height: 7),
+                SizedBox(
+                  width: 145,
+                  child: TextField(
+                    controller: rowData.priceController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    onChanged: (_) => onCalculated(),
+                    style: const TextStyle(
+                      color: Color(0xFF586273),
+                      fontSize: 14,
+                    ),
+                    decoration: InputDecoration(
+                      prefixText: '৳ ',
+                      hintText: 'Price',
+                      hintStyle: const TextStyle(
+                        color: Color(0xFF9AA3B0),
+                        fontSize: 14,
                       ),
-                      textCapitalization: TextCapitalization.sentences,
-                    );
-                  },
+                      filled: true,
+                      fillColor: Colors.white,
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 9,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: Color(0xFFE5E9EF)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: Color(0xFF9AB9F3)),
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            flex: 1,
-            child: TextField(
-              controller: rowData.priceController,
-              decoration: const InputDecoration(
-                hintText: 'Price',
-                prefixText: '৳ ',
-                border: InputBorder.none,
-                isDense: true,
-              ),
-              keyboardType: TextInputType.number,
-              onChanged: (_) => onCalculated(),
-            ),
-          ),
           IconButton(
             onPressed: onRemove,
-            icon: const Icon(Icons.remove_circle_outline, color: Colors.grey),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-            visualDensity: VisualDensity.compact,
+            icon: const Icon(
+              Icons.delete_outline,
+              color: Color(0xFFE35A5A),
+              size: 21,
+            ),
+            style: IconButton.styleFrom(
+              backgroundColor: const Color(0xFFFFEEEE),
+              minimumSize: const Size(38, 38),
+              padding: EdgeInsets.zero,
+            ),
+            tooltip: 'Remove item',
           ),
         ],
       ),

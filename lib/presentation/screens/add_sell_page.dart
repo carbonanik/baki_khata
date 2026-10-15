@@ -117,133 +117,192 @@ class _AddSellPageState extends ConsumerState<AddSellPage> {
     final products = ref.watch(productProvider);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF7F9FC),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFF7F9FC),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black87),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(
-          widget.customer.name,
-          style: const TextStyle(
-            color: Colors.black87,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        actions: [],
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            children: [
-              // Thin divider
-              Container(height: 1, color: Colors.grey[200]),
-
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      // Items Section
-                      const SizedBox(height: 24),
-
-                      ..._rowData.asMap().entries.map((entry) {
-                        final index = entry.key;
-                        final row = entry.value;
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: SellItemRow(
-                            index: index,
-                            rowData: row,
-                            products: products,
-                            onRemove: () => _removeRow(index),
-                            onCalculated: _calculateTotal,
-                          ),
-                        );
-                      }),
-
-                      // Add Item Button
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: Colors.black,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          elevation: 6,
-                          shadowColor: Colors.black38,
-                        ),
-                        onPressed: _addNewRow,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.add, size: 20),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Add Item',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: 32),
-
-                      // Summary Section
-                      SellSummary(
-                        totalAmount: totalAmount,
-                        paidAmount: paidAmount,
-                        dueAmount: dueAmount,
-                        isFullPaid: isFullPaid,
-                        paidController: paidController,
-                        noteController: noteController,
-                        onPaidChanged: _calculateTotal,
-                        onFullPaidChanged: (val) {
-                          setState(() {
-                            isFullPaid = val;
-                            // Clear paid amount if not full paid
-                            if (!isFullPaid) {
-                              paidController.text = '0';
-                            }
-                            _calculateTotal();
-                          });
-                        },
-                      ),
-                    ],
-                  ),
+        titleSpacing: 0,
+        title: Row(
+          children: [
+            CircleAvatar(
+              radius: 24,
+              backgroundColor: const Color(0xFFE2ECFF),
+              child: Text(
+                widget.customer.name.trim().isEmpty
+                    ? '?'
+                    : widget.customer.name.trim()[0].toUpperCase(),
+                style: const TextStyle(
+                  color: Color(0xFF1557D5),
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              Row(
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: totalAmount > 0 ? _handleSave : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: const Text(
-                        'SAVE SELL',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
+                  Text(
+                    widget.customer.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Color(0xFF111827),
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  Text(
+                    widget.customer.phone,
+                    style: const TextStyle(
+                      color: Color(0xFF8792A2),
+                      fontSize: 14,
                     ),
                   ),
                 ],
               ),
+            ),
+          ],
+        ),
+      ),
+      body: SafeArea(
+        child: Column(
+            children: [
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(
+                              0xFF9EACC2,
+                            ).withValues(alpha: 0.1),
+                            blurRadius: 20,
+                            offset: const Offset(0, 7),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Items',
+                                  style: TextStyle(
+                                    fontSize: 21,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF111827),
+                                  ),
+                                ),
+                                TextButton.icon(
+                                  onPressed: _addNewRow,
+                                  icon: const Icon(Icons.add, size: 20),
+                                  label: const Text('Add Item'),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: const Color(0xFF1557D5),
+                                    backgroundColor: const Color(0xFFF0F5FF),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 9,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    textStyle: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Divider(height: 1, color: Color(0xFFF0F2F5)),
+                          const SizedBox(height: 12),
+                          ..._rowData.asMap().entries.map((entry) {
+                            final index = entry.key;
+                            final row = entry.value;
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 10),
+                              child: SellItemRow(
+                                index: index,
+                                rowData: row,
+                                products: products,
+                                onRemove: () => _removeRow(index),
+                                onCalculated: _calculateTotal,
+                              ),
+                            );
+                          }),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SellSummary(
+                      totalAmount: totalAmount,
+                      dueAmount: dueAmount,
+                      itemCount: _rowData
+                          .where((row) => row.nameController.text.trim().isNotEmpty)
+                          .length,
+                      isFullPaid: isFullPaid,
+                      paidController: paidController,
+                      noteController: noteController,
+                      onPaidChanged: _calculateTotal,
+                      onClearPaid: () {
+                        isFullPaid = false;
+                        paidController.text = '0';
+                        _calculateTotal();
+                      },
+                      onNoteChanged: () => setState(() {}),
+                      onFullPaidChanged: (val) {
+                        isFullPaid = val;
+                        if (!isFullPaid) {
+                          paidController.text = '0';
+                        }
+                        _calculateTotal();
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: totalAmount > 0 ? _handleSave : null,
+                    icon: const Icon(Icons.receipt_long_outlined, size: 20),
+                    label: const Text('SAVE SELL'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF111315),
+                      disabledBackgroundColor: const Color(0xFF9CA3AF),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 17),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                      textStyle: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ],
-          ),
         ),
       ),
     );
