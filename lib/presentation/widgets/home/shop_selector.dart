@@ -12,12 +12,20 @@ class ShopSelector extends ConsumerWidget {
     final shop = ref.watch(shopProvider);
     final shopListNotifier = ref.watch(shopProvider.notifier);
 
-    if (shop == null) return const Text('Baki Khata');
+    if (shop == null) {
+      return const Text(
+        'Baki Khata',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
+    }
 
     return FutureBuilder<List<Shop>>(
       future: shopListNotifier.getShops(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) return Text(shop.name);
+        if (!snapshot.hasData) {
+          return Text(shop.name, maxLines: 1, overflow: TextOverflow.ellipsis);
+        }
 
         final shops = snapshot.data!;
 
@@ -28,18 +36,21 @@ class ShopSelector extends ConsumerWidget {
         return DropdownButtonHideUnderline(
           child: DropdownButton<String>(
             value: selectedValue,
+            isExpanded: true,
             hint: Text(
               shop.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 color: Colors.black,
-                fontSize: 20,
+                fontSize: 16,
                 fontWeight: FontWeight.w800,
               ),
             ),
             icon: const Icon(Icons.arrow_drop_down, color: Colors.black),
             style: const TextStyle(
               color: Colors.black,
-              fontSize: 20,
+              fontSize: 16,
               fontWeight: FontWeight.w800,
             ),
             onChanged: (String? newValue) {
@@ -57,7 +68,11 @@ class ShopSelector extends ConsumerWidget {
               ...shops.map<DropdownMenuItem<String>>((Shop s) {
                 return DropdownMenuItem<String>(
                   value: s.id,
-                  child: Text(s.name),
+                  child: Text(
+                    s.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 );
               }),
               const DropdownMenuItem<String>(

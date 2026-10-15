@@ -24,10 +24,10 @@ class CustomerTile extends ConsumerWidget {
         : DateTime.now().difference(latestTransaction.timestamp).inDays;
     final avatarStyle = _avatarStyle(customer.name);
     final updatedLabel = switch (daysSinceUpdate) {
-      null => 'No activity yet',
-      0 => 'Last updated today',
-      1 => 'Last updated yesterday',
-      final days => 'Last updated $days days ago',
+      null => 'এখনো লেনদেন নেই',
+      <= 0 => 'আজ আপডেট',
+      1 => 'গতকাল আপডেট',
+      final days => '$days দিন আগে',
     };
 
     return Dismissible(
@@ -48,7 +48,9 @@ class CustomerTile extends ConsumerWidget {
           builder: (context) {
             return AlertDialog(
               title: const Text('Delete Customer?'),
-              content: Text('Are you sure you want to delete ${customer.name}?'),
+              content: Text(
+                'Are you sure you want to delete ${customer.name}?',
+              ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
@@ -92,11 +94,11 @@ class CustomerTile extends ConsumerWidget {
             );
           },
           child: Container(
-            constraints: const BoxConstraints(minHeight: 118),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            constraints: const BoxConstraints(minHeight: 112),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: const Color(0xFFF1F4F8)),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE9EDF2)),
               boxShadow: const [
                 BoxShadow(
                   color: Color(0x080F2945),
@@ -108,8 +110,8 @@ class CustomerTile extends ConsumerWidget {
             child: Row(
               children: [
                 Container(
-                  width: 54,
-                  height: 54,
+                  width: 48,
+                  height: 48,
                   decoration: BoxDecoration(
                     color: avatarStyle.background,
                     shape: BoxShape.circle,
@@ -121,7 +123,7 @@ class CustomerTile extends ConsumerWidget {
                         : customer.name[0].toUpperCase(),
                     style: TextStyle(
                       color: avatarStyle.foreground,
-                      fontSize: 26,
+                      fontSize: 23,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -161,8 +163,7 @@ class CustomerTile extends ConsumerWidget {
                         children: [
                           _Metadata(
                             icon: Icons.shopping_bag_outlined,
-                            label:
-                                '$salesCount ${salesCount == 1 ? 'sale' : 'sales'}',
+                            label: '$salesCount বিক্রয়',
                           ),
                           const Text(
                             '•',
@@ -192,9 +193,9 @@ class CustomerTile extends ConsumerWidget {
                         currencyFormat.format(due),
                         style: TextStyle(
                           color: due > 0
-                              ? const Color(0xFFEF2929)
-                              : const Color(0xFF209A4B),
-                          fontSize: 15,
+                              ? const Color(0xFFB0003A)
+                              : const Color(0xFF006B4F),
+                          fontSize: 16,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -207,16 +208,16 @@ class CustomerTile extends ConsumerWidget {
                       ),
                       decoration: BoxDecoration(
                         color: due > 0
-                            ? const Color(0xFFFFE9EB)
-                            : const Color(0xFFE8F8ED),
+                            ? const Color(0xFFFFE2E7)
+                            : const Color(0xFFDDF8EB),
                         borderRadius: BorderRadius.circular(11),
                       ),
                       child: Text(
-                        due > 0 ? 'Due' : 'Paid',
+                        due > 0 ? 'বাকি আছে' : 'পরিশোধিত',
                         style: TextStyle(
                           color: due > 0
-                              ? const Color(0xFFEF2929)
-                              : const Color(0xFF209A4B),
+                              ? const Color(0xFFB0003A)
+                              : const Color(0xFF006B4F),
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                         ),
@@ -225,10 +226,18 @@ class CustomerTile extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(width: 6),
-                const Icon(
-                  Icons.chevron_right_rounded,
-                  color: Color(0xFF697586),
-                  size: 22,
+                Container(
+                  width: 30,
+                  height: 30,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFE5EEFF),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.chevron_right_rounded,
+                    color: Color(0xFF34466D),
+                    size: 20,
+                  ),
                 ),
               ],
             ),
@@ -264,10 +273,7 @@ class _Metadata extends StatelessWidget {
         const SizedBox(width: 5),
         Text(
           label,
-          style: const TextStyle(
-            color: Color(0xFF697586),
-            fontSize: 11,
-          ),
+          style: const TextStyle(color: Color(0xFF697586), fontSize: 11),
         ),
       ],
     );
