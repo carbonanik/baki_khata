@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/theme/app_shadows.dart';
 import '../../core/utils/bengali_formatters.dart';
 import '../../domain/entities/customer.dart';
 import '../../domain/entities/product.dart';
@@ -89,80 +90,55 @@ class _AddSellPageState extends ConsumerState<AddSellPage> {
     _calculateTotal();
   }
 
-  Future<void> _showAddItemModal(List<Product> products) async {
+  Future<void> _showAddItemDialog(List<Product> products) async {
     setState(() => _isAddingItem = true);
-    await showModalBottomSheet<void>(
+    await showDialog<void>(
       context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Colors.transparent,
-      builder: (modalContext) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.viewInsetsOf(modalContext).bottom,
+      builder: (dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 24,
           ),
-          child: StatefulBuilder(
-            builder: (context, setModalState) {
-              return Container(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.sizeOf(context).height * 0.88,
-                ),
-                decoration: const BoxDecoration(
-                  color: _pageBackground,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                ),
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(18, 12, 12, 0),
-                      child: Row(
-                        children: [
-                          const Expanded(
-                            child: Text(
-                              'পণ্য যোগ করুন',
-                              style: TextStyle(
-                                color: _ink,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                          IconButton(
-                            onPressed: () => Navigator.pop(modalContext),
-                            icon: const Icon(Icons.close_rounded),
-                            tooltip: 'বন্ধ করুন',
-                          ),
-                        ],
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: 560,
+              maxHeight: MediaQuery.sizeOf(dialogContext).height * 0.88,
+            ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return StatefulBuilder(
+                  builder: (context, setModalState) {
+                    return SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
+                      child: SellItemRow(
+                        key: ObjectKey(_draft),
+                        itemNumber: _items.length + 1,
+                        rowData: _draft,
+                        products: products,
+                        onRemove: () {
+                          _discardDraft();
+                          Navigator.pop(dialogContext);
+                        },
+                        onAddToList: () {
+                          final wasAdded = _addDraftToList();
+                          if (wasAdded) {
+                            Navigator.pop(dialogContext);
+                          } else {
+                            setModalState(() {});
+                          }
+                        },
+                        onCalculated: () => setModalState(() {}),
                       ),
-                    ),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
-                        child: SellItemRow(
-                          key: ObjectKey(_draft),
-                          itemNumber: _items.length + 1,
-                          rowData: _draft,
-                          products: products,
-                          onRemove: () {
-                            _discardDraft();
-                            Navigator.pop(modalContext);
-                          },
-                          onAddToList: () {
-                            final wasAdded = _addDraftToList();
-                            if (wasAdded) {
-                              Navigator.pop(modalContext);
-                            } else {
-                              setModalState(() {});
-                            }
-                          },
-                          onCalculated: () => setModalState(() {}),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
+                    );
+                  },
+                );
+              },
+            ),
           ),
         );
       },
@@ -310,11 +286,14 @@ class _AddSellPageState extends ConsumerState<AddSellPage> {
             }),
             const SizedBox(height: 2),
           ],
-          OutlinedButton.icon(
-            onPressed: _isAddingItem ? null : () => _showAddItemModal(products),
+          ElevatedButton.icon(
+            onPressed: _isAddingItem
+                ? null
+                : () => _showAddItemDialog(products),
             icon: const Icon(Icons.add_circle_outline_rounded),
             label: const Text('আরও পণ্য যোগ করুন'),
-            style: OutlinedButton.styleFrom(
+            style: ElevatedButton.styleFrom(
+              elevation: .1,
               foregroundColor: _green,
               backgroundColor: Colors.white,
               side: BorderSide.none,
@@ -378,13 +357,7 @@ class _CustomerSaleHeader extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(17),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF8795AC).withValues(alpha: 0.09),
-            blurRadius: 17,
-            offset: const Offset(0, 6),
-          ),
-        ],
+        boxShadow: const [appShadow],
       ),
       child: Column(
         children: [

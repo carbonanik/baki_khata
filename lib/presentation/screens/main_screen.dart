@@ -1,4 +1,5 @@
 import 'package:baki_khata/presentation/screens/products_page.dart';
+import 'package:baki_khata/core/theme/app_shadows.dart';
 import 'package:flutter/material.dart';
 import 'home_page.dart';
 import 'expense_page.dart';
@@ -50,13 +51,7 @@ class _MainScreenState extends State<MainScreen> {
           decoration: const BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(19)),
-            boxShadow: [
-              BoxShadow(
-                color: Color(0x0D25364A),
-                blurRadius: 14,
-                offset: Offset(0, -3),
-              ),
-            ],
+            boxShadow: [appShadow],
           ),
           child: Row(
             children: [

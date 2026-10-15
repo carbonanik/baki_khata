@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_shadows.dart';
 import '../../../core/utils/bengali_formatters.dart';
 import '../../../domain/entities/product.dart';
 import '../../../domain/entities/transaction.dart';
@@ -42,13 +43,7 @@ class SellItemRow extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(19),
         border: Border.all(color: const Color(0xFFB8D8CC)),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF8795AC).withValues(alpha: 0.08),
-            blurRadius: 14,
-            offset: const Offset(0, 5),
-          ),
-        ],
+        boxShadow: const [appShadow],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -402,13 +397,7 @@ class SavedSellItemCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(17),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF8795AC).withValues(alpha: 0.08),
-            blurRadius: 14,
-            offset: const Offset(0, 5),
-          ),
-        ],
+        boxShadow: const [appShadow],
       ),
       child: Row(
         children: [

@@ -1,5 +1,6 @@
 import 'package:baki_khata/main.dart';
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_shadows.dart';
 import '../../../core/utils/bengali_formatters.dart';
 
 const _green = Color(0xFF006B4F);
@@ -53,13 +54,7 @@ class SellSummary extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF8795AC).withValues(alpha: 0.09),
-            blurRadius: 18,
-            offset: const Offset(0, 6),
-          ),
-        ],
+        boxShadow: const [appShadow],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

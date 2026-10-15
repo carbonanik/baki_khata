@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_shadows.dart';
 import '../../../main.dart';
 
 class BalanceOverviewCard extends StatelessWidget {
@@ -24,13 +25,7 @@ class BalanceOverviewCard extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: const Color(0xFFE7EDF2)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0D25364A),
-            blurRadius: 14,
-            offset: Offset(0, 5),
-          ),
-        ],
+        boxShadow: const [appShadow],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

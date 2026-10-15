@@ -1,5 +1,6 @@
 import 'package:baki_khata/domain/entities/customer.dart';
 import 'package:baki_khata/domain/entities/transaction.dart';
+import 'package:baki_khata/core/theme/app_shadows.dart';
 import 'package:baki_khata/main.dart';
 import 'package:baki_khata/presentation/providers/app_providers.dart';
 import 'package:flutter/material.dart';
@@ -99,13 +100,7 @@ class CustomerTile extends ConsumerWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: const Color(0xFFE9EDF2)),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x080F2945),
-                  blurRadius: 14,
-                  offset: Offset(0, 6),
-                ),
-              ],
+              boxShadow: const [appShadow],
             ),
             child: Row(
               children: [

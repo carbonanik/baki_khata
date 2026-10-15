@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_shadows.dart';
 import '../../../main.dart';
 
 class CustomerSummaryCard extends StatelessWidget {
@@ -23,13 +24,7 @@ class CustomerSummaryCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF9EACC2).withValues(alpha: 0.12),
-                blurRadius: 22,
-                offset: const Offset(0, 8),
-              ),
-            ],
+            boxShadow: const [appShadow],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -143,13 +138,7 @@ class _TotalCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF9EACC2).withValues(alpha: 0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 7),
-          ),
-        ],
+        boxShadow: const [appShadow],
       ),
       child: Row(
         children: [

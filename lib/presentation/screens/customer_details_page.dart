@@ -1,5 +1,6 @@
 import 'package:baki_khata/domain/entities/customer.dart';
 import 'package:baki_khata/domain/entities/transaction.dart';
+import 'package:baki_khata/core/theme/app_shadows.dart';
 import 'package:baki_khata/presentation/providers/app_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -993,11 +994,5 @@ class _EmptyTransactions extends StatelessWidget {
 final _cardDecoration = BoxDecoration(
   color: Colors.white,
   borderRadius: BorderRadius.circular(17),
-  boxShadow: [
-    BoxShadow(
-      color: const Color(0xFF8795AC).withValues(alpha: 0.1),
-      blurRadius: 18,
-      offset: const Offset(0, 6),
-    ),
-  ],
+  boxShadow: const [appShadow],
 );
