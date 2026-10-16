@@ -46,34 +46,37 @@ class _MainScreenState extends State<MainScreen> {
       body: IndexedStack(index: _selectedIndex, children: _pages),
       bottomNavigationBar: SafeArea(
         top: false,
-        child: Container(
-          height: 69,
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(19)),
-            boxShadow: [appShadow],
-          ),
-          child: Row(
-            children: [
-              _NavigationItem(
-                icon: Icons.people_alt_outlined,
-                label: 'Customers',
-                selected: _selectedIndex == 0,
-                onTap: () => setState(() => _selectedIndex = 0),
-              ),
-              _NavigationItem(
-                icon: Icons.account_balance_wallet_outlined,
-                label: 'Expenses',
-                selected: _selectedIndex == 1,
-                onTap: () => setState(() => _selectedIndex = 1),
-              ),
-              _NavigationItem(
-                icon: Icons.inventory_2_outlined,
-                label: 'Products',
-                selected: _selectedIndex == 2,
-                onTap: () => setState(() => _selectedIndex = 2),
-              ),
-            ],
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+          child: Container(
+            height: 64,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8F9FF),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: const [appShadow],
+            ),
+            child: Row(
+              children: [
+                _NavigationItem(
+                  icon: Icons.people_alt_outlined,
+                  label: 'হিসাব',
+                  selected: _selectedIndex == 0,
+                  onTap: () => setState(() => _selectedIndex = 0),
+                ),
+                _NavigationItem(
+                  icon: Icons.account_balance_wallet_outlined,
+                  label: 'খরচ',
+                  selected: _selectedIndex == 1,
+                  onTap: () => setState(() => _selectedIndex = 1),
+                ),
+                _NavigationItem(
+                  icon: Icons.inventory_2_outlined,
+                  label: 'পণ্য',
+                  selected: _selectedIndex == 2,
+                  onTap: () => setState(() => _selectedIndex = 2),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -96,30 +99,21 @@ class _NavigationItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? const Color(0xFF111111) : const Color(0xFF858585);
+    final color = selected ? const Color(0xFF3E4943) : const Color(0xFF858585);
     return Expanded(
       child: InkWell(
         onTap: onTap,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(height: 3),
+            Icon(icon, color: color, size: 20),
+            const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
                 color: color,
                 fontSize: 12,
-                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-              ),
-            ),
-            const SizedBox(height: 5),
-            Container(
-              height: 3,
-              width: selected ? 56 : 0,
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(4),
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
               ),
             ),
           ],
