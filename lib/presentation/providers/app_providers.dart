@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import '../../domain/entities/customer.dart';
@@ -132,16 +134,34 @@ final transactionProvider =
 class ProductNotifier extends StateNotifier<List<Product>> {
   final SembastProductRepository _repo;
   final String _shopId;
+  StreamSubscription<List<Product>>? _productsSubscription;
 
   ProductNotifier(this._repo, this._shopId) : super([]) {
     loadProducts();
   }
 
   Future<void> loadProducts() async {
-    state = await _repo.getProducts(_shopId);
-    _repo.watchProducts(_shopId).listen((products) {
-      state = products;
+    final products = await _repo.getProducts(_shopId);
+    if (!mounted) {
+      return;
+    }
+    state = products;
+
+    await _productsSubscription?.cancel();
+    if (!mounted) {
+      return;
+    }
+    _productsSubscription = _repo.watchProducts(_shopId).listen((products) {
+      if (mounted) {
+        state = products;
+      }
     });
+  }
+
+  @override
+  void dispose() {
+    unawaited(_productsSubscription?.cancel());
+    super.dispose();
   }
 
   Future<void> addProduct(Product product) async {

@@ -24,25 +24,25 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F8FC),
-      appBar: _selectedIndex == 1
-          ? AppBar(
-              title: const Text('Expenses'),
-              actions: [
-                IconButton(
-                  tooltip: 'Products',
-                  onPressed: () {
-                    setState(() => _selectedIndex = 2);
-                  },
-                  icon: const Icon(
-                    Icons.inventory_2_outlined,
-                    color: Colors.black,
-                  ),
-                ),
-              ],
-            )
-          : _selectedIndex == 2
-              ? AppBar(title: const Text('Products'))
-              : null,
+      // appBar: _selectedIndex == 1
+      //     ? AppBar(
+      //         title: const Text('Expenses'),
+      //         actions: [
+      //           IconButton(
+      //             tooltip: 'Products',
+      //             onPressed: () {
+      //               setState(() => _selectedIndex = 2);
+      //             },
+      //             icon: const Icon(
+      //               Icons.inventory_2_outlined,
+      //               color: Colors.black,
+      //             ),
+      //           ),
+      //         ],
+      //       )
+      //     : _selectedIndex == 2
+      //         ? AppBar(title: const Text('Products'))
+      //         : null,
       body: IndexedStack(index: _selectedIndex, children: _pages),
       bottomNavigationBar: SafeArea(
         top: false,

@@ -1,5 +1,14 @@
 import 'package:uuid/uuid.dart';
 
+const List<String> defaultExpenseCategories = [
+  'চা ও আপ্যায়ন',
+  'দোকান ভাড়া',
+  'বিদ্যুৎ বিল',
+  'পরিবহন / ভাড়া',
+  'কর্মচারী বেতন',
+  'অন্যান্য',
+];
+
 class Expense {
   final String id;
   final String shopId;
